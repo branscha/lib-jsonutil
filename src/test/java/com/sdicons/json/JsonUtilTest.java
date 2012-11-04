@@ -1,6 +1,5 @@
 package com.sdicons.json;
 
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -12,8 +11,8 @@ import org.junit.Test;
 
 public class JsonUtilTest {
 
-	@Test
-	@SuppressWarnings("unchecked")
+    @Test
+    @SuppressWarnings("unchecked")
     public void composeMap() {
         Map<String, Object> map = new HashMap<String, Object>();
         JsonUtil.putObjectInMap("level1.level2.level3.voornaam", map, "Bruno");
@@ -53,10 +52,10 @@ public class JsonUtilTest {
         List<String> testList = new LinkedList<String>();
         testList.addAll(Arrays.asList("a", "b", "c", "d"));
         testMap3.put("alfabet", testList);
-        
-        // {"first":{"oele":"boele"},"second":{"makkis":"voele","alfabet":["a","b","c","d"]}, "third":true}
-        Assert.assertEquals("{\"first\":{\"oele\":\"boele\"},\"second\":{\"makkis\":\"voele\",\"alfabet\":[\"a\",\"b\",\"c\",\"d\"]},\"third\":true}",
-                JsonUtil.convertToJson(testMap1));
+
+        // {"first":{"oele":"boele"},"second":{"makkis":"voele","alfabet":["a","b","c","d"]},
+        // "third":true}
+        Assert.assertEquals("{\"first\":{\"oele\":\"boele\"},\"second\":{\"makkis\":\"voele\",\"alfabet\":[\"a\",\"b\",\"c\",\"d\"]},\"third\":true}", JsonUtil.convertToJson(testMap1));
     }
 
     @Test
@@ -105,18 +104,18 @@ public class JsonUtilTest {
         Assert.assertEquals("Hakelenberg", JsonUtil.getStringFromMap("level1.level2.level3.straat", map));
         Assert.assertEquals("Ranschaert", JsonUtil.getStringFromMap("level1.achternaam", map));
         Assert.assertEquals(4, (int) JsonUtil.getIntFromMap("level1.huisnr", map));
-        
+
         Assert.assertTrue(JsonUtil.getObjectFromMap("level1.level2.list", map) instanceof List);
         Assert.assertEquals(false, (boolean) JsonUtil.getBoolFromMap("level1.level2.list[0]", map));
         Assert.assertEquals(3, (int) JsonUtil.getIntFromMap("level1.level2.list[3]", map));
         Assert.assertEquals("7", JsonUtil.getStringFromMap("level1.level2.list[7]", map));
-        
+
         Assert.assertTrue(JsonUtil.getObjectFromMap("level1.level2.objlst", map) instanceof List);
         Assert.assertEquals("wereld", JsonUtil.getStringFromMap("level1.level2.objlst[0].hallo.nl", map));
         Assert.assertEquals("world", JsonUtil.getStringFromMap("level1.level2.objlst[0].hallo.en", map));
         Assert.assertEquals("hey", JsonUtil.getStringFromMap("level1.level2.objlst[1].dag", map));
         Assert.assertEquals("3d-array", JsonUtil.getStringFromMap("level1.level2.objlst[3][1][7]", map));
-        
+
         // Paths that lead nowhere.
         // Index too large
         Assert.assertEquals(null, JsonUtil.getStringFromMap("level1.level2.objlst[200].hallo.en", map));
@@ -402,7 +401,7 @@ public class JsonUtilTest {
 				"        }\n" + 
 				"    }\n" + 
 				"}";
-		Object map = JsonUtil.parseJson(example);
+		Object map =  JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
         Assert.assertTrue(JsonUtil.getObjectFromMap("glossary", (Map<?, ?>)map) instanceof Map);
         Assert.assertEquals(JsonUtil.getStringFromMap("glossary.title", (Map<?, ?>)map), "example glossary");
