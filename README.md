@@ -1,6 +1,7 @@
 # JSON Utilities
 ## A toolbox to parse and render JSON text
 ### What is it
+
 A utility class containing a number of static methods to read and write [JSON text][1].
 
 * No external dependencies, the implementation only uses standard Java.
@@ -17,10 +18,12 @@ Steps:
 
 ```Java
 // Create a map.
+//
 Map<String, String> testMap = new LinkedHashMap<String, String>();
 JsonUtil.putObjectInMap("lastName", map, "Ranschaert");
 JsonUtil.putObjectInMap("firstName", map, "Bruno");
 // Render to JSON.
+//
 String json = JsonUtil.convertToJson(testMap);
 ```
 
@@ -65,11 +68,13 @@ Steps:
 
 ```Java
 // Parse the JSON text into a map.
+//
 Map<String, Object> map = (Map<String,Object>) JsonUtil.parseJson(example);
-// Interrogate the map.
-JsonUtil.getStringFromMap("glossary.title", map)
-JsonUtil.getObjectFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso", map)
-JsonUtil.getStringFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso[1]", map
+// Interrogate the map (using path expressions).
+//
+JsonUtil.getStringFromMap("glossary.title", map);
+JsonUtil.getObjectFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso", map);
+JsonUtil.getStringFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso[1]", map);
 ```
 
 ### Build the project
