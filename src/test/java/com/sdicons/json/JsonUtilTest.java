@@ -121,30 +121,32 @@ public class JsonUtilTest {
         Assert.assertEquals(null, JsonUtil.getStringFromMap("level1.level2.objlst[200].hallo.en", map));
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void mapAccess2() {
         Map<String, Object> map = new HashMap<String, Object>();
         JsonUtil.putObjectInMap("level1.level2.level3.voornaam", map, "Bruno");
-        
-        // The structure contains a map at path "leve1", and we try to access it as an array.
+
+        // The structure contains a map at path "leve1", and we try to access it
+        // as an array.
         // It is structurally wrong to do so.
         JsonUtil.putObjectInMap("level1[0]", map, "BAD");
         Assert.fail("Trying to access a map as an array is wrong.");
     }
     
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void mapAccess3() {
         Map<String, Object> map = new HashMap<String, Object>();
         JsonUtil.putObjectInMap("level1[1].level2.level3.voornaam", map, "Bruno");
-        
-        // The structure contains an array at path "leve1", and we try to access it as a map.
+
+        // The structure contains an array at path "leve1", and we try to access
+        // it as a map.
         // It is structurally wrong to do so.
         JsonUtil.putObjectInMap("level1.test", map, "BAD");
         Assert.fail("Trying to access an array as a map is wrong.");
     }
 
-	@Test
-	@SuppressWarnings("unchecked")
+    @Test
+    @SuppressWarnings("unchecked")
     public void parseCombination() {
         String json = "{\"first\":{\"oele\":\"boele\"},\"second\":{\"makkis\":\"voele\",\"alfabet\":[\"a\",\"b\",\"c\",false]}}";
         Object map = JsonUtil.parseJson(json);
@@ -170,102 +172,102 @@ public class JsonUtilTest {
     
     @Test
     public void parseNullTest() {
-    	String json = "null";
-    	Object obj = JsonUtil.parseJson(json);
-    	Assert.assertNull(obj);
+        String json = "null";
+        Object obj = JsonUtil.parseJson(json);
+        Assert.assertNull(obj);
     }
     
     @Test
     public void renderNullTest() {
-    	String json = JsonUtil.convertToJson(null);
-    	Assert.assertEquals("Expected 'null' since it is a valid JSON identifier.", "null", json);
+        String json = JsonUtil.convertToJson(null);
+        Assert.assertEquals("Expected 'null' since it is a valid JSON identifier.", "null", json);
     }
     
-	@Test
-	@SuppressWarnings("rawtypes")
+    @Test
+    @SuppressWarnings("rawtypes")
     public void parseNullInObject() {
         String json = "{ \"key1\":null, \"key2\": \"val2\"}";
         Object map = JsonUtil.parseJson(json);
         Assert.assertTrue(map instanceof Map);
-        Assert.assertTrue(((Map)map).containsKey("key1"));
-        Assert.assertNull(((Map)map).get("key1"));
+        Assert.assertTrue(((Map) map).containsKey("key1"));
+        Assert.assertNull(((Map) map).get("key1"));
     }
     
     @Test
     public void parseBoolTest() {
-    	String json = "true";
-    	Object obj = JsonUtil.parseJson(json);
-    	Assert.assertTrue(obj instanceof Boolean);
-    	Assert.assertTrue((Boolean) obj);
-    	
-    	json = "false";
-    	obj = JsonUtil.parseJson(json);
-    	Assert.assertTrue(obj instanceof Boolean);
-    	Assert.assertFalse((Boolean) obj);
+        String json = "true";
+        Object obj = JsonUtil.parseJson(json);
+        Assert.assertTrue(obj instanceof Boolean);
+        Assert.assertTrue((Boolean) obj);
+
+        json = "false";
+        obj = JsonUtil.parseJson(json);
+        Assert.assertTrue(obj instanceof Boolean);
+        Assert.assertFalse((Boolean) obj);
     }
-    
-    @Test(expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest() {
-    	String json = "INVALIDTEXT";
-    	JsonUtil.parseJson(json);
+        String json = "INVALIDTEXT";
+        JsonUtil.parseJson(json);
     }
-    
-    @Test(expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest2() {
-    	// Open ended object.
-    	String json = "{ 123";
-    	JsonUtil.parseJson(json);
+        // Open ended object.
+        String json = "{ 123";
+        JsonUtil.parseJson(json);
     }
-    
-    @Test(expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest3() {
-    	// Open ended list.
-    	String json = "[ 123";
-    	JsonUtil.parseJson(json);
+        // Open ended list.
+        String json = "[ 123";
+        JsonUtil.parseJson(json);
     }
-    
-    @Test(expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest4() {
-    	// Bad , placement.
-    	String json = "[ , ]";
-    	JsonUtil.parseJson(json);
+        // Bad , placement.
+        String json = "[ , ]";
+        JsonUtil.parseJson(json);
     }
-    
-    @Test(expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest5() {
-    	// Bad , placement.
-    	String json = "";
-    	JsonUtil.parseJson(json);
+        // Bad , placement.
+        String json = "";
+        JsonUtil.parseJson(json);
     }
-    
-    @Test(expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest6() {
-    	// Bad object content.
-    	String json = "{[]}";
-    	JsonUtil.parseJson(json);
+        // Bad object content.
+        String json = "{[]}";
+        JsonUtil.parseJson(json);
     }
-    
-    @Test(expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest7() {
-    	// Unclosed object
-    	String json = "{\"key\":\"value\" x";
-    	JsonUtil.parseJson(json);
+        // Unclosed object
+        String json = "{\"key\":\"value\" x";
+        JsonUtil.parseJson(json);
     }
-    
-    @Test(expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest8() {
-    	Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<String, Object>();
         // Index far too large.
-    	JsonUtil.putObjectInMap("level1[9999999999999999999999999999999999999999999999999]", map, Boolean.TRUE);
+        JsonUtil.putObjectInMap("level1[9999999999999999999999999999999999999999999999999]", map, Boolean.TRUE);
     }
-    
-    @Test(expected=IllegalArgumentException.class)
+
+    @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest9() {
-    	Map<String, Object> map = new HashMap<String, Object>();
+        Map<String, Object> map = new HashMap<String, Object>();
         // Index far too large.
         Assert.assertEquals(null, JsonUtil.getStringFromMap("level1[9999999999999999999999999999999999999999999999999]", map));
     }
-    
+
     @Test
     public void parseIntegerTest() {
         String json = "123";
@@ -273,112 +275,112 @@ public class JsonUtilTest {
         Assert.assertTrue(num instanceof Number);
         Assert.assertEquals(((Number) num).intValue(), 123);
     }
-    
+
     @Test
     public void renderIntegerTest() {
-    	String json = JsonUtil.convertToJson(123);
-    	Assert.assertEquals("Expected '123' since it is a valid JSON identifier.", "123", json);
+        String json = JsonUtil.convertToJson(123);
+        Assert.assertEquals("Expected '123' since it is a valid JSON identifier.", "123", json);
     }
-    
-	@Test
-	@SuppressWarnings("rawtypes")
+
+    @Test
+    @SuppressWarnings("rawtypes")
     public void mapGetters() {
         String json = "{ \"intval\":123, \"intval2\":\"345\",\"nulval\": null, \"strval\":\"oele\", \"boolval\":true, \"boolval2\":\"true\", \"boolval3\":\"false\", \"boolval4\":\"bad\"}";
         Object map = JsonUtil.parseJson(json);
         Assert.assertTrue(map instanceof Map);
-        
-        Assert.assertEquals(JsonUtil.getIntFromMap("intval", (Map)map), (Integer) 123);
-        Assert.assertEquals(JsonUtil.getIntFromMap("intval2", (Map)map), (Integer) 345);
-        Assert.assertEquals(JsonUtil.getStringFromMap("strval", (Map)map), "oele");
-        Assert.assertTrue(JsonUtil.getBoolFromMap("boolval", (Map)map));
-        Assert.assertTrue(JsonUtil.getBoolFromMap("boolval2", (Map)map));
-        Assert.assertFalse(JsonUtil.getBoolFromMap("boolval3", (Map)map));
-        Assert.assertNull(JsonUtil.getBoolFromMap("boolval4", (Map)map));
-        Assert.assertNull(JsonUtil.getIntFromMap("boolval4", (Map)map));
-        
-        Assert.assertNull(JsonUtil.getIntFromMap("no-intval", (Map)map));
-        Assert.assertNull(JsonUtil.getIntFromMap("strval", (Map)map));
-        Assert.assertNull(JsonUtil.getStringFromMap("no-strval", (Map)map));
-        Assert.assertNull(JsonUtil.getBoolFromMap("no-boolval", (Map)map));
-        Assert.assertNull(JsonUtil.getBoolFromMap("intval", (Map)map));
-        Assert.assertNull(JsonUtil.getIntFromMap((String) null, (Map)map));
-        Assert.assertNull(JsonUtil.getIntFromMap(".", (Map)map));
-        Assert.assertNull(JsonUtil.getIntFromMap("this.leads.to.nowhere", (Map)map));
+
+        Assert.assertEquals(JsonUtil.getIntFromMap("intval", (Map) map), (Integer) 123);
+        Assert.assertEquals(JsonUtil.getIntFromMap("intval2", (Map) map), (Integer) 345);
+        Assert.assertEquals(JsonUtil.getStringFromMap("strval", (Map) map), "oele");
+        Assert.assertTrue(JsonUtil.getBoolFromMap("boolval", (Map) map));
+        Assert.assertTrue(JsonUtil.getBoolFromMap("boolval2", (Map) map));
+        Assert.assertFalse(JsonUtil.getBoolFromMap("boolval3", (Map) map));
+        Assert.assertNull(JsonUtil.getBoolFromMap("boolval4", (Map) map));
+        Assert.assertNull(JsonUtil.getIntFromMap("boolval4", (Map) map));
+
+        Assert.assertNull(JsonUtil.getIntFromMap("no-intval", (Map) map));
+        Assert.assertNull(JsonUtil.getIntFromMap("strval", (Map) map));
+        Assert.assertNull(JsonUtil.getStringFromMap("no-strval", (Map) map));
+        Assert.assertNull(JsonUtil.getBoolFromMap("no-boolval", (Map) map));
+        Assert.assertNull(JsonUtil.getBoolFromMap("intval", (Map) map));
+        Assert.assertNull(JsonUtil.getIntFromMap((String) null, (Map) map));
+        Assert.assertNull(JsonUtil.getIntFromMap(".", (Map) map));
+        Assert.assertNull(JsonUtil.getIntFromMap("this.leads.to.nowhere", (Map) map));
     }
 	
-	@Test
-	@SuppressWarnings("unchecked")
-	public void testComparison() {
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testComparison() {
         String left = "{ \"intval\":123, \"intval2\":\"345\",\"nulval\": null, \"strval\":\"oele\", \"boolval\":true, \"boolval2\":\"true\"}";
         String right = "{ \"intval\":123, \"intval2\":\"345\",\"nulval\": null, \"strval\":\"boele\", \"boolval\":true, \"aiai\":\"true\"}";
         Object leftMap = JsonUtil.parseJson(left);
         Object rightMap = JsonUtil.parseJson(right);
-        
+
         // Calculate the differences.
-        List<String> differences = JsonUtil.compareMaps((Map<String,Object>)leftMap, (Map<String,Object>)rightMap);
-        
+        List<String> differences = JsonUtil.compareMaps((Map<String, Object>) leftMap, (Map<String, Object>) rightMap);
+
         // Examine the differences.
         Assert.assertTrue(differences.size() == 3);
         Assert.assertTrue(JsonUtil.hasAddition(differences, "aiai"));
         Assert.assertTrue(JsonUtil.hasRemoval(differences, "boolval2"));
         Assert.assertTrue(JsonUtil.hasChange(differences, "strval"));
-	}
-	
-	@Test
-	@SuppressWarnings("unchecked")
-	public void testComparison2() {
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testComparison2() {
         String left = "{\"first\":{\"oele\":\"Xoele\"},\"second\":{\"makkis\":\"voele\",\"alfabet\":[\"a\",\"b\",\"c\",false]}}";
         String right = "{\"first\":{\"oele\":\"Yoele\"},\"second\":{\"letters\":[\"a\",\"b\",\"c\",false]}}";
         Object leftMap = JsonUtil.parseJson(left);
         Object rightMap = JsonUtil.parseJson(right);
-        
+
         // Calculate the differences.
-        List<String> differences = JsonUtil.compareMaps((Map<String,Object>)leftMap, (Map<String,Object>)rightMap);
-        
+        List<String> differences = JsonUtil.compareMaps((Map<String, Object>) leftMap, (Map<String, Object>) rightMap);
+
         // Examine the differences.
         Assert.assertTrue(differences.size() == 4);
         Assert.assertTrue(JsonUtil.hasChange(differences, "first.oele"));
         Assert.assertTrue(JsonUtil.hasRemoval(differences, "second.alfabet"));
         Assert.assertTrue(JsonUtil.hasRemoval(differences, "second.makkis"));
         Assert.assertTrue(JsonUtil.hasAddition(differences, "second.letters"));
-        
+
         // Wrong statements.
         Assert.assertFalse(JsonUtil.hasAddition(differences, "watisdat.hier"));
-	}
-	
-	@Test
-	@SuppressWarnings("unchecked")
-	public void testComparison3() {
-		// Difference between key with null value and 
-		// absence of the key.
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testComparison3() {
+        // Difference between key with null value and
+        // absence of the key.
         String left = "{\"key\":null}";
         String right = "{}";
         Object leftMap = JsonUtil.parseJson(left);
         Object rightMap = JsonUtil.parseJson(right);
-        List<String> differences = JsonUtil.compareMaps((Map<String,Object>)leftMap, (Map<String,Object>)rightMap);
+        List<String> differences = JsonUtil.compareMaps((Map<String, Object>) leftMap, (Map<String, Object>) rightMap);
         Assert.assertTrue(differences.size() == 1);
-        
-        // Difference between absence of the key and a 
+
+        // Difference between absence of the key and a
         // key with null value.
         left = "{}";
         right = "{\"key\":null}";
         leftMap = JsonUtil.parseJson(left);
         rightMap = JsonUtil.parseJson(right);
-        differences = JsonUtil.compareMaps((Map<String,Object>)leftMap, (Map<String,Object>)rightMap);
+        differences = JsonUtil.compareMaps((Map<String, Object>) leftMap, (Map<String, Object>) rightMap);
         Assert.assertTrue(differences.size() == 1);
         Assert.assertTrue(JsonUtil.hasAddition(differences, "key"));
-        
+
         // Special case where a key contains null values.
         left = "{\"key\":null}";
         right = "{\"key\":null}";
         leftMap = JsonUtil.parseJson(left);
         rightMap = JsonUtil.parseJson(right);
-        differences = JsonUtil.compareMaps((Map<String,Object>)leftMap, (Map<String,Object>)rightMap);
+        differences = JsonUtil.compareMaps((Map<String, Object>) leftMap, (Map<String, Object>) rightMap);
         Assert.assertTrue(differences.size() == 0);
-	}
+    }
 	
-	@Test
-	public void testCrockfordExample1() {
+    @Test
+    public void testCrockfordExample1() {
 		String example = "{\n" + 
 				"    \"glossary\": {\n" + 
 				"        \"title\": \"example glossary\",\n" + 
@@ -401,16 +403,16 @@ public class JsonUtilTest {
 				"        }\n" + 
 				"    }\n" + 
 				"}";
-		Object map =  JsonUtil.parseJson(example);
+        Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
-        Assert.assertTrue(JsonUtil.getObjectFromMap("glossary", (Map<?, ?>)map) instanceof Map);
-        Assert.assertEquals(JsonUtil.getStringFromMap("glossary.title", (Map<?, ?>)map), "example glossary");
-        Assert.assertTrue(JsonUtil.getObjectFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso", (Map<?, ?>)map) instanceof List);
-        Assert.assertEquals(JsonUtil.getStringFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso[1]", (Map<?, ?>)map), "XML");
-	}
+        Assert.assertTrue(JsonUtil.getObjectFromMap("glossary", (Map<?, ?>) map) instanceof Map);
+        Assert.assertEquals(JsonUtil.getStringFromMap("glossary.title", (Map<?, ?>) map), "example glossary");
+        Assert.assertTrue(JsonUtil.getObjectFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso", (Map<?, ?>) map) instanceof List);
+        Assert.assertEquals(JsonUtil.getStringFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso[1]", (Map<?, ?>) map), "XML");
+    }
 	
-	@Test
-	public void testCrockfordExample2() {
+    @Test
+    public void testCrockfordExample2() {
 		String example = "{\"menu\": {\n" + 
 				"  \"id\": \"file\",\n" + 
 				"  \"value\": \"File\",\n" + 
@@ -422,12 +424,12 @@ public class JsonUtilTest {
 				"    ]\n" + 
 				"  }\n" + 
 				"}}";
-		Object map = JsonUtil.parseJson(example);
+        Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
-	}
+    }
     
     @Test
-	public void testCrockfordExample2Bis() {
+    public void testCrockfordExample2Bis() {
         // This example uses single quotes for strings.
         // The JSON utility should adjust automatically for this case as well.
         // A JSON string in Java code looks much more elegant in this way.
@@ -442,12 +444,12 @@ public class JsonUtilTest {
 				"    ]" + 
 				"  }" + 
 				"}}";
-		Object map = JsonUtil.parseJson(example);
+        Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
-	}
+    }
 	
-	@Test
-	public void testCrockfordExample3() {
+    @Test
+    public void testCrockfordExample3() {
 		String example = "{\"widget\": {\n" + 
 				"    \"debug\": \"on\",\n" + 
 				"    \"window\": {\n" + 
@@ -474,12 +476,12 @@ public class JsonUtilTest {
 				"        \"onMouseUp\": \"sun1.opacity = (sun1.opacity / 100) * 90;\"\n" + 
 				"    }\n" + 
 				"}} ";
-		Object map = JsonUtil.parseJson(example);
+        Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
-	}
+    }
 	
-	@Test
-	public void testCrockfordExample4() {
+    @Test
+    public void testCrockfordExample4() {
 		String example = "{\"web-app\": {\n" + 
 				"  \"servlet\": [   \n" + 
 				"    {\n" + 
@@ -569,16 +571,16 @@ public class JsonUtilTest {
 				"    \"taglib-uri\": \"cofax.tld\",\n" + 
 				"    \"taglib-location\": \"/WEB-INF/tlds/cofax.tld\"}}}";
 		
-		// Make the parser sweat. 
-		// Check if there are objects lingering around (leaks).
-		for(int i = 0; i < 100; i++) {
-			Object map = JsonUtil.parseJson(example);
-	        Assert.assertTrue(map instanceof Map);
-		}
-	}
+        // Make the parser sweat.
+        // Check if there are objects lingering around (leaks).
+        for (int i = 0; i < 100; i++) {
+            Object map = JsonUtil.parseJson(example);
+            Assert.assertTrue(map instanceof Map);
+        }
+    }
 	
-	@Test
-	public void testCrockfordExample5() {
+    @Test
+    public void testCrockfordExample5() {
 		String example = "{\"menu\": {\n" + 
 				"    \"header\": \"SVG Viewer\",\n" + 
 				"    \"items\": [\n" + 
@@ -606,19 +608,19 @@ public class JsonUtilTest {
 				"        {\"id\": \"About\", \"label\": \"About Adobe CVG Viewer...\"}\n" + 
 				"    ]\n" + 
 				"}}";
-		Object map = JsonUtil.parseJson(example);
+        Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
-	}
+    }
 	
-	@Test
-	public void testAdobe1() {
-		String example = "[ 100, 500, 300, 200, 400 ]";
-		Object map = JsonUtil.parseJson(example);
+    @Test
+    public void testAdobe1() {
+        String example = "[ 100, 500, 300, 200, 400 ]";
+        Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof List);
-	}
+    }
 	
-	@Test
-	public void testAdobe2() {
+    @Test
+    public void testAdobe2() {
 		String example = "{\n" + 
 				"	\"id\": \"0001\",\n" + 
 				"	\"type\": \"donut\",\n" + 
@@ -645,12 +647,12 @@ public class JsonUtilTest {
 				"			{ \"id\": \"5004\", \"type\": \"Maple\" }\n" + 
 				"		]\n" + 
 				"}";
-		Object map = JsonUtil.parseJson(example);
+        Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
-	}
+    }
 	
-	@Test
-	public void testAdobe3() {
+    @Test
+    public void testAdobe3() {
 		String example = "[\n" + 
 				"	{\n" + 
 				"		\"id\": \"0001\",\n" + 
@@ -721,12 +723,12 @@ public class JsonUtilTest {
 				"			]\n" + 
 				"	}\n" + 
 				"]";
-		Object map = JsonUtil.parseJson(example);
+        Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof List);
-	}
+    }
 	
-	@Test
-	public void testAdobe4() {
+    @Test
+    public void testAdobe4() {
 		String example = "{\n" + 
 				"	\"id\": \"0001\",\n" + 
 				"	\"type\": \"donut\",\n" + 
@@ -744,12 +746,12 @@ public class JsonUtilTest {
 				"			\"height\": 32\n" + 
 				"		}\n" + 
 				"}";
-		Object map = JsonUtil.parseJson(example);
+        Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
-	}
+    }
 	
-	@Test
-	public void testGoogle1() {
+    @Test
+    public void testGoogle1() {
 		String example = "{\n" + 
 				"  \"apiVersion\": \"2.0\",\n" + 
 				"  \"data\": {\n" + 
@@ -796,10 +798,10 @@ public class JsonUtilTest {
 				"    ]\n" + 
 				"  }\n" + 
 				"}";
-		Object map = JsonUtil.parseJson(example);
+        Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
-        Assert.assertEquals(JsonUtil.getStringFromMap("data.items[0].id", (Map<?, ?>)map), "BGODurRfVv4");
-        Assert.assertEquals(JsonUtil.getStringFromMap("data.items[0].tags[1]", (Map<?, ?>)map), "dog surfing");
-        Assert.assertTrue(JsonUtil.getBoolFromMap("data.items[0].commentsAllowed", (Map<?, ?>)map));
-	}
+        Assert.assertEquals(JsonUtil.getStringFromMap("data.items[0].id", (Map<?, ?>) map), "BGODurRfVv4");
+        Assert.assertEquals(JsonUtil.getStringFromMap("data.items[0].tags[1]", (Map<?, ?>) map), "dog surfing");
+        Assert.assertTrue(JsonUtil.getBoolFromMap("data.items[0].commentsAllowed", (Map<?, ?>) map));
+    }
 }
