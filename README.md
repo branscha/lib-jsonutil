@@ -77,6 +77,12 @@ JsonUtil.getObjectFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.Gloss
 JsonUtil.getStringFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso[1]", map);
 ```
 
+### Other features
+
+* Pretty printing flag.
+* The JSON text can contain single quotes or double quotes to delimit the strings. Single quotes can be useful when the JSON text is embedded in Java to reduce backslash clutter.
+* Parsing is very fast.
+
 ### Build the project
 
 The project is Maven based, it contains a single utility class and its corresponding JUnit test.
