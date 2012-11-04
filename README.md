@@ -1,6 +1,6 @@
 # JSON Utilities
 ## A toolbox to parse and render JSON text
-### What is it
+### Short Description
 
 A utility class containing a number of static methods to read and write [JSON text][1].
 
@@ -9,7 +9,7 @@ A utility class containing a number of static methods to read and write [JSON te
 * Optional support to get/put values in the nested map data structure by using path expressions. This is only a convenience, you can use the nested Maps directly  as well.
 * Thoroughly profiled and tested.
 
-### Render JSON
+### Example: Render JSON
 
 Steps:
 
@@ -33,7 +33,7 @@ This will produce something like:
 {"lastName":"Ranschaert", "firstName":"Bruno"}
 ```
 
-### Parse JSON
+### Example: Parse JSON
 
 Steps:
 
