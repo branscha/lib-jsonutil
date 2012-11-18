@@ -5,6 +5,7 @@
  ******************************************************************************/
 package com.sdicons.json;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
@@ -170,10 +171,24 @@ public final class JsonUtil {
         StringBuilder parsed = new StringBuilder(data.length());
         return parseJson(st, parsed);
     }
+     
+    /**
+     * Convert a JSON string into a nested structure of Map instances.
+     * 
+     * @param data
+     *            The JSON text stream.
+     * @return A nested data structure of Map/List instances.
+     * 
+     */
+    public static Object parseJson(BufferedReader reader) {
+        StreamTokenizer st = new StreamTokenizer(reader);
+        StringBuilder parsed = new StringBuilder();
+        return parseJson(st, parsed);
+    }
 
     // The parsing workhorse.
     //
-    private static Object parseJson(StreamTokenizer st, StringBuilder parsed) {
+    protected static Object parseJson(StreamTokenizer st, StringBuilder parsed) {
         // This is the top-level of the JSON parser, it decides which kind of
         // JSON expression is next in the input stream. The general strategy
         // is to look at the first characters, make a decision about which
