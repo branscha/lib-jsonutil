@@ -761,9 +761,7 @@ public final class JsonUtil {
      */
     public static interface PathResolver {
         Object get(Object container);
-
         void put(Object container, Object value);
-
         Object createContainer();
     }
 

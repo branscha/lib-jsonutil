@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.StreamTokenizer;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -20,6 +21,9 @@ import java.util.Map;
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public class JsonUtilTest {
 
@@ -142,7 +146,7 @@ public class JsonUtilTest {
         // as an array.
         // It is structurally wrong to do so.
         JsonUtil.putObjectInMap("level1[0]", map, "BAD");
-        Assert.fail("Trying to access a map as an array is wrong.");
+     // We should never arrive here.;
     }
     
     @Test(expected = IllegalArgumentException.class)
@@ -154,7 +158,7 @@ public class JsonUtilTest {
         // it as a map.
         // It is structurally wrong to do so.
         JsonUtil.putObjectInMap("level1.test", map, "BAD");
-        Assert.fail("Trying to access an array as a map is wrong.");
+        // We should never arrive here.;
     }
 
     @Test
@@ -827,9 +831,78 @@ public class JsonUtilTest {
         StringBuilder parsed = new StringBuilder();
         JsonUtil.parseJson(st, parsed);
         //
-        Assert.fail("Expected an exception to be thrown.");
+        // We should never arrive here.
     }
     
+    @Test(expected=IllegalArgumentException.class)
+    public void parseIOExceptionTest2() throws Exception {
+        // The tokenizer will immediately fail.
+        //
+        final StreamTokenizer st = Mockito.spy(new StreamTokenizer(new StringReader("")));
+        
+        Answer<?> answer = new Answer<Object>() {
+            private int counter = 0;
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                switch(counter) {
+                case 0:
+                    st.ttype = '{';
+                    st.sval = "{";
+                    break;
+                case 1:
+                case 2:
+                    st.ttype = '"';
+                    st.sval = "key";
+                    break;
+                default: 
+                    throw new IOException("Got you!");
+                }
+                counter++;
+                return null;
+            }
+        };
+        
+        Mockito.doAnswer(answer).when(st).nextToken();
+        //
+        StringBuilder parsed = new StringBuilder();
+        JsonUtil.parseJson(st, parsed);
+        //
+        // We should never arrive here.
+    }
     
-    
+    @Test(expected=IllegalArgumentException.class)
+    public void parseIOExceptionTest3() throws Exception {
+        // The tokenizer will immediately fail.
+        //
+        final StreamTokenizer st = Mockito.spy(new StreamTokenizer(new StringReader("")));
+        
+        Answer<?> answer = new Answer<Object>() {
+            private int counter = 0;
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                switch(counter) {
+                case 0:
+                    st.ttype = '[';
+                    st.sval = "[";
+                    break;
+                case 1:
+                case 2:
+                    st.ttype = '"';
+                    st.sval = "key";
+                    break;
+                default: 
+                    throw new IOException("Got you!");
+                }
+                counter++;
+                return null;
+            }
+        };
+        
+        Mockito.doAnswer(answer).when(st).nextToken();
+        //
+        StringBuilder parsed = new StringBuilder();
+        JsonUtil.parseJson(st, parsed);
+        //
+        // We should never arrive here.
+    }
 }
