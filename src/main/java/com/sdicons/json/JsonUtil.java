@@ -196,8 +196,7 @@ public final class JsonUtil {
         // we expect and call the appropriate expression parser. In order to
         // make sure
         // the individual expression parsers see the whole expression we push
-        // back
-        // the tokens we used to make the decision.
+        // back the tokens we used to make the decision.
         // Each JSON expression type should have an entry here.
         try {
             st.nextToken();
