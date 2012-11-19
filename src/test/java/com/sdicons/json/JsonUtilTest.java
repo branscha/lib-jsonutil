@@ -8,6 +8,7 @@ package com.sdicons.json;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
@@ -915,5 +916,11 @@ public class JsonUtilTest {
         JsonUtil.parseJson(st, parsed);
         //
         // We should never arrive here.
+    }
+    
+    @Test
+    public void bufferedReaderParserTest() {
+        Object obj = JsonUtil.parseJson(new BufferedReader(new StringReader("{}")));
+        Assert.assertNotNull(obj);
     }
 }
