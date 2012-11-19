@@ -913,13 +913,15 @@ public final class JsonUtil {
             for (int i = 0; i < (resolvers.length - 1); i++) {
                 if (intermediate == null) {
                     // Can not proceed ...
-                    throw new IllegalArgumentException("The value cannot be inserted in this container, it is impossible to create extra nodes.");
-                } else {
+                    throw new IllegalArgumentException("The value cannot be inserted in this container, there is no container to attach new nodes.");
+                } 
+                else {
                     Object candidate = resolvers[i].get(intermediate);
                     if (candidate != null) {
                         // We are fine.
                         intermediate = candidate;
-                    } else if (candidate == null && (i < resolvers.length - 1)) {
+                    } 
+                    else if (candidate == null && (i < resolvers.length - 1)) {
                         // We will create a new node.
                         candidate = resolvers[i + 1].createContainer();
                         if (candidate == null) {
@@ -928,7 +930,8 @@ public final class JsonUtil {
                         }
                         resolvers[i].put(intermediate, candidate);
                         intermediate = candidate;
-                    } else {
+                    } 
+                    else {
                         // Cannot proceed, we don't know the type of the new
                         // node.
                         throw new IllegalArgumentException("It is not possible to create a new intermediary container.");

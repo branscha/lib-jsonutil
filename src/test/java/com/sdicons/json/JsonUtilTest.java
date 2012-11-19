@@ -26,6 +26,8 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.sdicons.json.JsonUtil.PathResolver;
+
 public class JsonUtilTest {
 
     @Test
@@ -270,19 +272,34 @@ public class JsonUtilTest {
         String json = "{\"key\":\"value\" x";
         JsonUtil.parseJson(json);
     }
-
+    
     @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest8() {
+        // Expected : but received a number.
+        String json = "{\"key\" 123.50";
+        JsonUtil.parseJson(json);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidMapAccess1() {
         Map<String, Object> map = new HashMap<String, Object>();
         // Index far too large.
         JsonUtil.putObjectInMap("level1[9999999999999999999999999999999999999999999999999]", map, Boolean.TRUE);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void parseInvalidTest9() {
+    public void invalidMapAccess2() {
         Map<String, Object> map = new HashMap<String, Object>();
         // Index far too large.
         Assert.assertEquals(null, JsonUtil.getStringFromMap("level1[9999999999999999999999999999999999999999999999999]", map));
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidMapAccess3() {
+        // Cannot add intermediate containers to null, there is no place to
+        // store new nodes.
+        PathResolver path = JsonUtil.compilePath("uno.duo.tres");
+        path.put(null,  "oele");
     }
 
     @Test
