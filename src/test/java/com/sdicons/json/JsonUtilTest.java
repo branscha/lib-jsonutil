@@ -821,6 +821,9 @@ public class JsonUtilTest {
         Assert.assertTrue(JsonUtil.getBoolFromMap("data.items[0].commentsAllowed", (Map<?, ?>) map));
     }
     
+    // A technical test to test the handling of an IOException in the 
+    // main JSON parsing routine.
+    // Code coverage.
     @Test(expected=IllegalArgumentException.class)
     public void parseIOExceptionTest() throws Exception {
         // The tokenizer will immediately fail.
@@ -834,12 +837,15 @@ public class JsonUtilTest {
         // We should never arrive here.
     }
     
+    // A technical test to invoke an IOException while parsing a JSON object.
+    // It is used to test the exception handling in the object parsing procedure.
+    // Code coverage.
     @Test(expected=IllegalArgumentException.class)
     public void parseIOExceptionTest2() throws Exception {
-        // The tokenizer will immediately fail.
-        //
+        // Create a real tokenizer first.
         final StreamTokenizer st = Mockito.spy(new StreamTokenizer(new StringReader("")));
-        
+        // Overwrite the tokenizer behavior. The first tree tokens will behave as the start
+        // of a JSON object, but the fourth invocation will throw an exception.
         Answer<?> answer = new Answer<Object>() {
             private int counter = 0;
             @Override
@@ -861,7 +867,8 @@ public class JsonUtilTest {
                 return null;
             }
         };
-        
+        // Impose the mocking behavior on the real tokenizer using
+        // the Mockito framework.
         Mockito.doAnswer(answer).when(st).nextToken();
         //
         StringBuilder parsed = new StringBuilder();
@@ -870,12 +877,15 @@ public class JsonUtilTest {
         // We should never arrive here.
     }
     
+    // A technical test to invoke an IOException while parsing a JSON list.
+    // It is used to test the exception handling in the list parsing procedure.
+    // Code coverage.
     @Test(expected=IllegalArgumentException.class)
     public void parseIOExceptionTest3() throws Exception {
-        // The tokenizer will immediately fail.
-        //
+        // Create a real tokenizer first.
         final StreamTokenizer st = Mockito.spy(new StreamTokenizer(new StringReader("")));
-        
+        // Overwrite the tokenizer behavior. The first tree tokens will behave as the start
+        // of a JSON list, but the fourth invocation will throw an exception.
         Answer<?> answer = new Answer<Object>() {
             private int counter = 0;
             @Override
@@ -897,7 +907,8 @@ public class JsonUtilTest {
                 return null;
             }
         };
-        
+        // Impose the mocking behavior on the real tokenizer using
+        // the Mockito framework.
         Mockito.doAnswer(answer).when(st).nextToken();
         //
         StringBuilder parsed = new StringBuilder();
