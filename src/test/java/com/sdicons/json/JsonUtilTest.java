@@ -1,13 +1,32 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Bruno Ranschaert
+ * Released under the MIT License: http://opensource.org/licenses/MIT
+ * Library "jsonutil"
+ ******************************************************************************/
 package com.sdicons.json;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import junit.framework.Assert;
+
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+import com.sdicons.json.JsonUtil.PathResolver;
 
 public class JsonUtilTest {
 
@@ -130,7 +149,7 @@ public class JsonUtilTest {
         // as an array.
         // It is structurally wrong to do so.
         JsonUtil.putObjectInMap("level1[0]", map, "BAD");
-        Assert.fail("Trying to access a map as an array is wrong.");
+     // We should never arrive here.;
     }
     
     @Test(expected = IllegalArgumentException.class)
@@ -142,7 +161,7 @@ public class JsonUtilTest {
         // it as a map.
         // It is structurally wrong to do so.
         JsonUtil.putObjectInMap("level1.test", map, "BAD");
-        Assert.fail("Trying to access an array as a map is wrong.");
+        // We should never arrive here.;
     }
 
     @Test
@@ -253,19 +272,34 @@ public class JsonUtilTest {
         String json = "{\"key\":\"value\" x";
         JsonUtil.parseJson(json);
     }
-
+    
     @Test(expected = IllegalArgumentException.class)
     public void parseInvalidTest8() {
+        // Expected : but received a number.
+        String json = "{\"key\" 123.50";
+        JsonUtil.parseJson(json);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidMapAccess1() {
         Map<String, Object> map = new HashMap<String, Object>();
         // Index far too large.
         JsonUtil.putObjectInMap("level1[9999999999999999999999999999999999999999999999999]", map, Boolean.TRUE);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void parseInvalidTest9() {
+    public void invalidMapAccess2() {
         Map<String, Object> map = new HashMap<String, Object>();
         // Index far too large.
         Assert.assertEquals(null, JsonUtil.getStringFromMap("level1[9999999999999999999999999999999999999999999999999]", map));
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void invalidMapAccess3() {
+        // Cannot add intermediate containers to null, there is no place to
+        // store new nodes.
+        PathResolver path = JsonUtil.compilePath("uno.duo.tres");
+        path.put(null,  "oele");
     }
 
     @Test
@@ -307,7 +341,7 @@ public class JsonUtilTest {
         Assert.assertNull(JsonUtil.getIntFromMap(".", (Map) map));
         Assert.assertNull(JsonUtil.getIntFromMap("this.leads.to.nowhere", (Map) map));
     }
-	
+    
     @Test
     @SuppressWarnings("unchecked")
     public void testComparison() {
@@ -378,31 +412,31 @@ public class JsonUtilTest {
         differences = JsonUtil.compareMaps((Map<String, Object>) leftMap, (Map<String, Object>) rightMap);
         Assert.assertTrue(differences.size() == 0);
     }
-	
+    
     @Test
     public void testCrockfordExample1() {
         String example = "{\n" + 
-        		"    \"glossary\": {\n" + 
-        		"        \"title\": \"example glossary\",\n" + 
-        		"		\"GlossDiv\": {\n" + 
-        		"            \"title\": \"S\",\n" + 
-        		"			\"GlossList\": {\n" + 
-        		"                \"GlossEntry\": {\n" + 
-        		"                    \"ID\": \"SGML\",\n" + 
-        		"					\"SortAs\": \"SGML\",\n" + 
-        		"					\"GlossTerm\": \"Standard Generalized Markup Language\",\n" + 
-        		"					\"Acronym\": \"SGML\",\n" + 
-        		"					\"Abbrev\": \"ISO 8879:1986\",\n" + 
-        		"					\"GlossDef\": {\n" + 
-        		"                        \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\",\n" + 
-        		"						\"GlossSeeAlso\": [\"GML\", \"XML\"]\n" + 
-        		"                    },\n" + 
-        		"					\"GlossSee\": \"markup\"\n" + 
-        		"                }\n" + 
-        		"            }\n" + 
-        		"        }\n" + 
-        		"    }\n" + 
-        		"}";
+                "    \"glossary\": {\n" + 
+                "        \"title\": \"example glossary\",\n" + 
+                "        \"GlossDiv\": {\n" + 
+                "            \"title\": \"S\",\n" + 
+                "            \"GlossList\": {\n" + 
+                "                \"GlossEntry\": {\n" + 
+                "                    \"ID\": \"SGML\",\n" + 
+                "                    \"SortAs\": \"SGML\",\n" + 
+                "                    \"GlossTerm\": \"Standard Generalized Markup Language\",\n" + 
+                "                    \"Acronym\": \"SGML\",\n" + 
+                "                    \"Abbrev\": \"ISO 8879:1986\",\n" + 
+                "                    \"GlossDef\": {\n" + 
+                "                        \"para\": \"A meta-markup language, used to create markup languages such as DocBook.\",\n" + 
+                "                        \"GlossSeeAlso\": [\"GML\", \"XML\"]\n" + 
+                "                    },\n" + 
+                "                    \"GlossSee\": \"markup\"\n" + 
+                "                }\n" + 
+                "            }\n" + 
+                "        }\n" + 
+                "    }\n" + 
+                "}";
         Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
         Assert.assertTrue(JsonUtil.getObjectFromMap("glossary", (Map<?, ?>) map) instanceof Map);
@@ -410,20 +444,20 @@ public class JsonUtilTest {
         Assert.assertTrue(JsonUtil.getObjectFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso", (Map<?, ?>) map) instanceof List);
         Assert.assertEquals(JsonUtil.getStringFromMap("glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso[1]", (Map<?, ?>) map), "XML");
     }
-	
+    
     @Test
     public void testCrockfordExample2() {
         String example = "{\"menu\": {\n" + 
-        		"  \"id\": \"file\",\n" + 
-        		"  \"value\": \"File\",\n" + 
-        		"  \"popup\": {\n" + 
-        		"    \"menuitem\": [\n" + 
-        		"      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\n" + 
-        		"      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\n" + 
-        		"      {\"value\": 'Close', \"onclick\": \"CloseDoc()\"}\n" + 
-        		"    ]\n" + 
-        		"  }\n" + 
-        		"}}";
+                "  \"id\": \"file\",\n" + 
+                "  \"value\": \"File\",\n" + 
+                "  \"popup\": {\n" + 
+                "    \"menuitem\": [\n" + 
+                "      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\n" + 
+                "      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\n" + 
+                "      {\"value\": 'Close', \"onclick\": \"CloseDoc()\"}\n" + 
+                "    ]\n" + 
+                "  }\n" + 
+                "}}";
         Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
     }
@@ -447,130 +481,130 @@ public class JsonUtilTest {
         Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
     }
-	
+    
     @Test
     public void testCrockfordExample3() {
         String example = "{\"widget\": {\n" + 
-        		"    \"debug\": \"on\",\n" + 
-        		"    \"window\": {\n" + 
-        		"        \"title\": \"Sample Konfabulator Widget\",\n" + 
-        		"        \"name\": \"main_window\",\n" + 
-        		"        \"width\": 500,\n" + 
-        		"        \"height\": 500\n" + 
-        		"    },\n" + 
-        		"    \"image\": { \n" + 
-        		"        \"src\": \"Images/Sun.png\",\n" + 
-        		"        \"name\": \"sun1\",\n" + 
-        		"        \"hOffset\": 250,\n" + 
-        		"        \"vOffset\": 250,\n" + 
-        		"        \"alignment\": \"center\"\n" + 
-        		"    },\n" + 
-        		"    \"text\": {\n" + 
-        		"        \"data\": \"Click Here\",\n" + 
-        		"        \"size\": 36,\n" + 
-        		"        \"style\": \"bold\",\n" + 
-        		"        \"name\": \"text1\",\n" + 
-        		"        \"hOffset\": 250,\n" + 
-        		"        \"vOffset\": 100,\n" + 
-        		"        \"alignment\": \"center\",\n" + 
-        		"        \"onMouseUp\": \"sun1.opacity = (sun1.opacity / 100) * 90;\"\n" + 
-        		"    }\n" + 
-        		"}} ";
+                "    \"debug\": \"on\",\n" + 
+                "    \"window\": {\n" + 
+                "        \"title\": \"Sample Konfabulator Widget\",\n" + 
+                "        \"name\": \"main_window\",\n" + 
+                "        \"width\": 500,\n" + 
+                "        \"height\": 500\n" + 
+                "    },\n" + 
+                "    \"image\": { \n" + 
+                "        \"src\": \"Images/Sun.png\",\n" + 
+                "        \"name\": \"sun1\",\n" + 
+                "        \"hOffset\": 250,\n" + 
+                "        \"vOffset\": 250,\n" + 
+                "        \"alignment\": \"center\"\n" + 
+                "    },\n" + 
+                "    \"text\": {\n" + 
+                "        \"data\": \"Click Here\",\n" + 
+                "        \"size\": 36,\n" + 
+                "        \"style\": \"bold\",\n" + 
+                "        \"name\": \"text1\",\n" + 
+                "        \"hOffset\": 250,\n" + 
+                "        \"vOffset\": 100,\n" + 
+                "        \"alignment\": \"center\",\n" + 
+                "        \"onMouseUp\": \"sun1.opacity = (sun1.opacity / 100) * 90;\"\n" + 
+                "    }\n" + 
+                "}} ";
         Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
     }
-	
+    
     @Test
     public void testCrockfordExample4() {
         String example = "{\"web-app\": {\n" + 
-        		"  \"servlet\": [   \n" + 
-        		"    {\n" + 
-        		"      \"servlet-name\": \"cofaxCDS\",\n" + 
-        		"      \"servlet-class\": \"org.cofax.cds.CDSServlet\",\n" + 
-        		"      \"init-param\": {\n" + 
-        		"        \"configGlossary:installationAt\": \"Philadelphia, PA\",\n" + 
-        		"        \"configGlossary:adminEmail\": \"ksm@pobox.com\",\n" + 
-        		"        \"configGlossary:poweredBy\": \"Cofax\",\n" + 
-        		"        \"configGlossary:poweredByIcon\": \"/images/cofax.gif\",\n" + 
-        		"        \"configGlossary:staticPath\": \"/content/static\",\n" + 
-        		"        \"templateProcessorClass\": \"org.cofax.WysiwygTemplate\",\n" + 
-        		"        \"templateLoaderClass\": \"org.cofax.FilesTemplateLoader\",\n" + 
-        		"        \"templatePath\": \"templates\",\n" + 
-        		"        \"templateOverridePath\": \"\",\n" + 
-        		"        \"defaultListTemplate\": \"listTemplate.htm\",\n" + 
-        		"        \"defaultFileTemplate\": \"articleTemplate.htm\",\n" + 
-        		"        \"useJSP\": false,\n" + 
-        		"        \"jspListTemplate\": \"listTemplate.jsp\",\n" + 
-        		"        \"jspFileTemplate\": \"articleTemplate.jsp\",\n" + 
-        		"        \"cachePackageTagsTrack\": 200,\n" + 
-        		"        \"cachePackageTagsStore\": 200,\n" + 
-        		"        \"cachePackageTagsRefresh\": 60,\n" + 
-        		"        \"cacheTemplatesTrack\": 100,\n" + 
-        		"        \"cacheTemplatesStore\": 50,\n" + 
-        		"        \"cacheTemplatesRefresh\": 15,\n" + 
-        		"        \"cachePagesTrack\": 200,\n" + 
-        		"        \"cachePagesStore\": 100,\n" + 
-        		"        \"cachePagesRefresh\": 10,\n" + 
-        		"        \"cachePagesDirtyRead\": 10,\n" + 
-        		"        \"searchEngineListTemplate\": \"forSearchEnginesList.htm\",\n" + 
-        		"        \"searchEngineFileTemplate\": \"forSearchEngines.htm\",\n" + 
-        		"        \"searchEngineRobotsDb\": \"WEB-INF/robots.db\",\n" + 
-        		"        \"useDataStore\": true,\n" + 
-        		"        \"dataStoreClass\": \"org.cofax.SqlDataStore\",\n" + 
-        		"        \"redirectionClass\": \"org.cofax.SqlRedirection\",\n" + 
-        		"        \"dataStoreName\": \"cofax\",\n" + 
-        		"        \"dataStoreDriver\": \"com.microsoft.jdbc.sqlserver.SQLServerDriver\",\n" + 
-        		"        \"dataStoreUrl\": \"jdbc:microsoft:sqlserver://LOCALHOST:1433;DatabaseName=goon\",\n" + 
-        		"        \"dataStoreUser\": \"sa\",\n" + 
-        		"        \"dataStorePassword\": \"dataStoreTestQuery\",\n" + 
-        		"        \"dataStoreTestQuery\": \"SET NOCOUNT ON;select test='test';\",\n" + 
-        		"        \"dataStoreLogFile\": \"/usr/local/tomcat/logs/datastore.log\",\n" + 
-        		"        \"dataStoreInitConns\": 10,\n" + 
-        		"        \"dataStoreMaxConns\": 100,\n" + 
-        		"        \"dataStoreConnUsageLimit\": 100,\n" + 
-        		"        \"dataStoreLogLevel\": \"debug\",\n" + 
-        		"        \"maxUrlLength\": 500}},\n" + 
-        		"    {\n" + 
-        		"      \"servlet-name\": \"cofaxEmail\",\n" + 
-        		"      \"servlet-class\": \"org.cofax.cds.EmailServlet\",\n" + 
-        		"      \"init-param\": {\n" + 
-        		"      \"mailHost\": \"mail1\",\n" + 
-        		"      \"mailHostOverride\": \"mail2\"}},\n" + 
-        		"    {\n" + 
-        		"      \"servlet-name\": \"cofaxAdmin\",\n" + 
-        		"      \"servlet-class\": \"org.cofax.cds.AdminServlet\"},\n" + 
-        		" \n" + 
-        		"    {\n" + 
-        		"      \"servlet-name\": \"fileServlet\",\n" + 
-        		"      \"servlet-class\": \"org.cofax.cds.FileServlet\"},\n" + 
-        		"    {\n" + 
-        		"      \"servlet-name\": \"cofaxTools\",\n" + 
-        		"      \"servlet-class\": \"org.cofax.cms.CofaxToolsServlet\",\n" + 
-        		"      \"init-param\": {\n" + 
-        		"        \"templatePath\": \"toolstemplates/\",\n" + 
-        		"        \"log\": 1,\n" + 
-        		"        \"logLocation\": \"/usr/local/tomcat/logs/CofaxTools.log\",\n" + 
-        		"        \"logMaxSize\": \"\",\n" + 
-        		"        \"dataLog\": 1,\n" + 
-        		"        \"dataLogLocation\": \"/usr/local/tomcat/logs/dataLog.log\",\n" + 
-        		"        \"dataLogMaxSize\": \"\",\n" + 
-        		"        \"removePageCache\": \"/content/admin/remove?cache=pages&id=\",\n" + 
-        		"        \"removeTemplateCache\": \"/content/admin/remove?cache=templates&id=\",\n" + 
-        		"        \"fileTransferFolder\": \"/usr/local/tomcat/webapps/content/fileTransferFolder\",\n" + 
-        		"        \"lookInContext\": 1,\n" + 
-        		"        \"adminGroupID\": 4,\n" + 
-        		"        \"betaServer\": true}}],\n" + 
-        		"  \"servlet-mapping\": {\n" + 
-        		"    \"cofaxCDS\": \"/\",\n" + 
-        		"    \"cofaxEmail\": \"/cofaxutil/aemail/*\",\n" + 
-        		"    \"cofaxAdmin\": \"/admin/*\",\n" + 
-        		"    \"fileServlet\": \"/static/*\",\n" + 
-        		"    \"cofaxTools\": \"/tools/*\"},\n" + 
-        		" \n" + 
-        		"  \"taglib\": {\n" + 
-        		"    \"taglib-uri\": \"cofax.tld\",\n" + 
-        		"    \"taglib-location\": \"/WEB-INF/tlds/cofax.tld\"}}}";
-		
+                "  \"servlet\": [   \n" + 
+                "    {\n" + 
+                "      \"servlet-name\": \"cofaxCDS\",\n" + 
+                "      \"servlet-class\": \"org.cofax.cds.CDSServlet\",\n" + 
+                "      \"init-param\": {\n" + 
+                "        \"configGlossary:installationAt\": \"Philadelphia, PA\",\n" + 
+                "        \"configGlossary:adminEmail\": \"ksm@pobox.com\",\n" + 
+                "        \"configGlossary:poweredBy\": \"Cofax\",\n" + 
+                "        \"configGlossary:poweredByIcon\": \"/images/cofax.gif\",\n" + 
+                "        \"configGlossary:staticPath\": \"/content/static\",\n" + 
+                "        \"templateProcessorClass\": \"org.cofax.WysiwygTemplate\",\n" + 
+                "        \"templateLoaderClass\": \"org.cofax.FilesTemplateLoader\",\n" + 
+                "        \"templatePath\": \"templates\",\n" + 
+                "        \"templateOverridePath\": \"\",\n" + 
+                "        \"defaultListTemplate\": \"listTemplate.htm\",\n" + 
+                "        \"defaultFileTemplate\": \"articleTemplate.htm\",\n" + 
+                "        \"useJSP\": false,\n" + 
+                "        \"jspListTemplate\": \"listTemplate.jsp\",\n" + 
+                "        \"jspFileTemplate\": \"articleTemplate.jsp\",\n" + 
+                "        \"cachePackageTagsTrack\": 200,\n" + 
+                "        \"cachePackageTagsStore\": 200,\n" + 
+                "        \"cachePackageTagsRefresh\": 60,\n" + 
+                "        \"cacheTemplatesTrack\": 100,\n" + 
+                "        \"cacheTemplatesStore\": 50,\n" + 
+                "        \"cacheTemplatesRefresh\": 15,\n" + 
+                "        \"cachePagesTrack\": 200,\n" + 
+                "        \"cachePagesStore\": 100,\n" + 
+                "        \"cachePagesRefresh\": 10,\n" + 
+                "        \"cachePagesDirtyRead\": 10,\n" + 
+                "        \"searchEngineListTemplate\": \"forSearchEnginesList.htm\",\n" + 
+                "        \"searchEngineFileTemplate\": \"forSearchEngines.htm\",\n" + 
+                "        \"searchEngineRobotsDb\": \"WEB-INF/robots.db\",\n" + 
+                "        \"useDataStore\": true,\n" + 
+                "        \"dataStoreClass\": \"org.cofax.SqlDataStore\",\n" + 
+                "        \"redirectionClass\": \"org.cofax.SqlRedirection\",\n" + 
+                "        \"dataStoreName\": \"cofax\",\n" + 
+                "        \"dataStoreDriver\": \"com.microsoft.jdbc.sqlserver.SQLServerDriver\",\n" + 
+                "        \"dataStoreUrl\": \"jdbc:microsoft:sqlserver://LOCALHOST:1433;DatabaseName=goon\",\n" + 
+                "        \"dataStoreUser\": \"sa\",\n" + 
+                "        \"dataStorePassword\": \"dataStoreTestQuery\",\n" + 
+                "        \"dataStoreTestQuery\": \"SET NOCOUNT ON;select test='test';\",\n" + 
+                "        \"dataStoreLogFile\": \"/usr/local/tomcat/logs/datastore.log\",\n" + 
+                "        \"dataStoreInitConns\": 10,\n" + 
+                "        \"dataStoreMaxConns\": 100,\n" + 
+                "        \"dataStoreConnUsageLimit\": 100,\n" + 
+                "        \"dataStoreLogLevel\": \"debug\",\n" + 
+                "        \"maxUrlLength\": 500}},\n" + 
+                "    {\n" + 
+                "      \"servlet-name\": \"cofaxEmail\",\n" + 
+                "      \"servlet-class\": \"org.cofax.cds.EmailServlet\",\n" + 
+                "      \"init-param\": {\n" + 
+                "      \"mailHost\": \"mail1\",\n" + 
+                "      \"mailHostOverride\": \"mail2\"}},\n" + 
+                "    {\n" + 
+                "      \"servlet-name\": \"cofaxAdmin\",\n" + 
+                "      \"servlet-class\": \"org.cofax.cds.AdminServlet\"},\n" + 
+                " \n" + 
+                "    {\n" + 
+                "      \"servlet-name\": \"fileServlet\",\n" + 
+                "      \"servlet-class\": \"org.cofax.cds.FileServlet\"},\n" + 
+                "    {\n" + 
+                "      \"servlet-name\": \"cofaxTools\",\n" + 
+                "      \"servlet-class\": \"org.cofax.cms.CofaxToolsServlet\",\n" + 
+                "      \"init-param\": {\n" + 
+                "        \"templatePath\": \"toolstemplates/\",\n" + 
+                "        \"log\": 1,\n" + 
+                "        \"logLocation\": \"/usr/local/tomcat/logs/CofaxTools.log\",\n" + 
+                "        \"logMaxSize\": \"\",\n" + 
+                "        \"dataLog\": 1,\n" + 
+                "        \"dataLogLocation\": \"/usr/local/tomcat/logs/dataLog.log\",\n" + 
+                "        \"dataLogMaxSize\": \"\",\n" + 
+                "        \"removePageCache\": \"/content/admin/remove?cache=pages&id=\",\n" + 
+                "        \"removeTemplateCache\": \"/content/admin/remove?cache=templates&id=\",\n" + 
+                "        \"fileTransferFolder\": \"/usr/local/tomcat/webapps/content/fileTransferFolder\",\n" + 
+                "        \"lookInContext\": 1,\n" + 
+                "        \"adminGroupID\": 4,\n" + 
+                "        \"betaServer\": true}}],\n" + 
+                "  \"servlet-mapping\": {\n" + 
+                "    \"cofaxCDS\": \"/\",\n" + 
+                "    \"cofaxEmail\": \"/cofaxutil/aemail/*\",\n" + 
+                "    \"cofaxAdmin\": \"/admin/*\",\n" + 
+                "    \"fileServlet\": \"/static/*\",\n" + 
+                "    \"cofaxTools\": \"/tools/*\"},\n" + 
+                " \n" + 
+                "  \"taglib\": {\n" + 
+                "    \"taglib-uri\": \"cofax.tld\",\n" + 
+                "    \"taglib-location\": \"/WEB-INF/tlds/cofax.tld\"}}}";
+        
         // Make the parser sweat.
         // Check if there are objects lingering around (leaks).
         for (int i = 0; i < 100; i++) {
@@ -578,230 +612,332 @@ public class JsonUtilTest {
             Assert.assertTrue(map instanceof Map);
         }
     }
-	
+    
     @Test
     public void testCrockfordExample5() {
         String example = "{\"menu\": {\n" + 
-        		"    \"header\": \"SVG Viewer\",\n" + 
-        		"    \"items\": [\n" + 
-        		"        {\"id\": \"Open\"},\n" + 
-        		"        {\"id\": \"OpenNew\", \"label\": \"Open New\"},\n" + 
-        		"        null,\n" + 
-        		"        {\"id\": \"ZoomIn\", \"label\": \"Zoom In\"},\n" + 
-        		"        {\"id\": \"ZoomOut\", \"label\": \"Zoom Out\"},\n" + 
-        		"        {\"id\": \"OriginalView\", \"label\": \"Original View\"},\n" + 
-        		"        null,\n" + 
-        		"        {\"id\": \"Quality\"},\n" + 
-        		"        {\"id\": \"Pause\"},\n" + 
-        		"        {\"id\": \"Mute\"},\n" + 
-        		"        null,\n" + 
-        		"        {\"id\": \"Find\", \"label\": \"Find...\"},\n" + 
-        		"        {\"id\": \"FindAgain\", \"label\": \"Find Again\"},\n" + 
-        		"        {\"id\": \"Copy\"},\n" + 
-        		"        {\"id\": \"CopyAgain\", \"label\": \"Copy Again\"},\n" + 
-        		"        {\"id\": \"CopySVG\", \"label\": \"Copy SVG\"},\n" + 
-        		"        {\"id\": \"ViewSVG\", \"label\": \"View SVG\"},\n" + 
-        		"        {\"id\": \"ViewSource\", \"label\": \"View Source\"},\n" + 
-        		"        {\"id\": \"SaveAs\", \"label\": \"Save As\"},\n" + 
-        		"        null,\n" + 
-        		"        {\"id\": \"Help\"},\n" + 
-        		"        {\"id\": \"About\", \"label\": \"About Adobe CVG Viewer...\"}\n" + 
-        		"    ]\n" + 
-        		"}}";
+                "    \"header\": \"SVG Viewer\",\n" + 
+                "    \"items\": [\n" + 
+                "        {\"id\": \"Open\"},\n" + 
+                "        {\"id\": \"OpenNew\", \"label\": \"Open New\"},\n" + 
+                "        null,\n" + 
+                "        {\"id\": \"ZoomIn\", \"label\": \"Zoom In\"},\n" + 
+                "        {\"id\": \"ZoomOut\", \"label\": \"Zoom Out\"},\n" + 
+                "        {\"id\": \"OriginalView\", \"label\": \"Original View\"},\n" + 
+                "        null,\n" + 
+                "        {\"id\": \"Quality\"},\n" + 
+                "        {\"id\": \"Pause\"},\n" + 
+                "        {\"id\": \"Mute\"},\n" + 
+                "        null,\n" + 
+                "        {\"id\": \"Find\", \"label\": \"Find...\"},\n" + 
+                "        {\"id\": \"FindAgain\", \"label\": \"Find Again\"},\n" + 
+                "        {\"id\": \"Copy\"},\n" + 
+                "        {\"id\": \"CopyAgain\", \"label\": \"Copy Again\"},\n" + 
+                "        {\"id\": \"CopySVG\", \"label\": \"Copy SVG\"},\n" + 
+                "        {\"id\": \"ViewSVG\", \"label\": \"View SVG\"},\n" + 
+                "        {\"id\": \"ViewSource\", \"label\": \"View Source\"},\n" + 
+                "        {\"id\": \"SaveAs\", \"label\": \"Save As\"},\n" + 
+                "        null,\n" + 
+                "        {\"id\": \"Help\"},\n" + 
+                "        {\"id\": \"About\", \"label\": \"About Adobe CVG Viewer...\"}\n" + 
+                "    ]\n" + 
+                "}}";
         Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
     }
-	
+    
     @Test
     public void testAdobe1() {
         String example = "[ 100, 500, 300, 200, 400 ]";
         Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof List);
     }
-	
+    
     @Test
     public void testAdobe2() {
         String example = "{\n" + 
-        		"	\"id\": \"0001\",\n" + 
-        		"	\"type\": \"donut\",\n" + 
-        		"	\"name\": \"Cake\",\n" + 
-        		"	\"ppu\": 0.55,\n" + 
-        		"	\"batters\":\n" + 
-        		"		{\n" + 
-        		"			\"batter\":\n" + 
-        		"				[\n" + 
-        		"					{ \"id\": \"1001\", \"type\": \"Regular\" },\n" + 
-        		"					{ \"id\": \"1002\", \"type\": \"Chocolate\" },\n" + 
-        		"					{ \"id\": \"1003\", \"type\": \"Blueberry\" },\n" + 
-        		"					{ \"id\": \"1004\", \"type\": \"Devil's Food\" }\n" + 
-        		"				]\n" + 
-        		"		},\n" + 
-        		"	\"topping\":\n" + 
-        		"		[\n" + 
-        		"			{ \"id\": \"5001\", \"type\": \"None\" },\n" + 
-        		"			{ \"id\": \"5002\", \"type\": \"Glazed\" },\n" + 
-        		"			{ \"id\": \"5005\", \"type\": \"Sugar\" },\n" + 
-        		"			{ \"id\": \"5007\", \"type\": \"Powdered Sugar\" },\n" + 
-        		"			{ \"id\": \"5006\", \"type\": \"Chocolate with Sprinkles\" },\n" + 
-        		"			{ \"id\": \"5003\", \"type\": \"Chocolate\" },\n" + 
-        		"			{ \"id\": \"5004\", \"type\": \"Maple\" }\n" + 
-        		"		]\n" + 
-        		"}";
+                "    \"id\": \"0001\",\n" + 
+                "    \"type\": \"donut\",\n" + 
+                "    \"name\": \"Cake\",\n" + 
+                "    \"ppu\": 0.55,\n" + 
+                "    \"batters\":\n" + 
+                "        {\n" + 
+                "            \"batter\":\n" + 
+                "                [\n" + 
+                "                    { \"id\": \"1001\", \"type\": \"Regular\" },\n" + 
+                "                    { \"id\": \"1002\", \"type\": \"Chocolate\" },\n" + 
+                "                    { \"id\": \"1003\", \"type\": \"Blueberry\" },\n" + 
+                "                    { \"id\": \"1004\", \"type\": \"Devil's Food\" }\n" + 
+                "                ]\n" + 
+                "        },\n" + 
+                "    \"topping\":\n" + 
+                "        [\n" + 
+                "            { \"id\": \"5001\", \"type\": \"None\" },\n" + 
+                "            { \"id\": \"5002\", \"type\": \"Glazed\" },\n" + 
+                "            { \"id\": \"5005\", \"type\": \"Sugar\" },\n" + 
+                "            { \"id\": \"5007\", \"type\": \"Powdered Sugar\" },\n" + 
+                "            { \"id\": \"5006\", \"type\": \"Chocolate with Sprinkles\" },\n" + 
+                "            { \"id\": \"5003\", \"type\": \"Chocolate\" },\n" + 
+                "            { \"id\": \"5004\", \"type\": \"Maple\" }\n" + 
+                "        ]\n" + 
+                "}";
         Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
     }
-	
+    
     @Test
     public void testAdobe3() {
         String example = "[\n" + 
-        		"	{\n" + 
-        		"		\"id\": \"0001\",\n" + 
-        		"		\"type\": \"donut\",\n" + 
-        		"		\"name\": \"Cake\",\n" + 
-        		"		\"ppu\": 0.55,\n" + 
-        		"		\"batters\":\n" + 
-        		"			{\n" + 
-        		"				\"batter\":\n" + 
-        		"					[\n" + 
-        		"						{ \"id\": \"1001\", \"type\": \"Regular\" },\n" + 
-        		"						{ \"id\": \"1002\", \"type\": \"Chocolate\" },\n" + 
-        		"						{ \"id\": \"1003\", \"type\": \"Blueberry\" },\n" + 
-        		"						{ \"id\": \"1004\", \"type\": \"Devil's Food\" }\n" + 
-        		"					]\n" + 
-        		"			},\n" + 
-        		"		\"topping\":\n" + 
-        		"			[\n" + 
-        		"				{ \"id\": \"5001\", \"type\": \"None\" },\n" + 
-        		"				{ \"id\": \"5002\", \"type\": \"Glazed\" },\n" + 
-        		"				{ \"id\": \"5005\", \"type\": \"Sugar\" },\n" + 
-        		"				{ \"id\": \"5007\", \"type\": \"Powdered Sugar\" },\n" + 
-        		"				{ \"id\": \"5006\", \"type\": \"Chocolate with Sprinkles\" },\n" + 
-        		"				{ \"id\": \"5003\", \"type\": \"Chocolate\" },\n" + 
-        		"				{ \"id\": \"5004\", \"type\": \"Maple\" }\n" + 
-        		"			]\n" + 
-        		"	},\n" + 
-        		"	{\n" + 
-        		"		\"id\": \"0002\",\n" + 
-        		"		\"type\": \"donut\",\n" + 
-        		"		\"name\": \"Raised\",\n" + 
-        		"		\"ppu\": 0.55,\n" + 
-        		"		\"batters\":\n" + 
-        		"			{\n" + 
-        		"				\"batter\":\n" + 
-        		"					[\n" + 
-        		"						{ \"id\": \"1001\", \"type\": \"Regular\" }\n" + 
-        		"					]\n" + 
-        		"			},\n" + 
-        		"		\"topping\":\n" + 
-        		"			[\n" + 
-        		"				{ \"id\": \"5001\", \"type\": \"None\" },\n" + 
-        		"				{ \"id\": \"5002\", \"type\": \"Glazed\" },\n" + 
-        		"				{ \"id\": \"5005\", \"type\": \"Sugar\" },\n" + 
-        		"				{ \"id\": \"5003\", \"type\": \"Chocolate\" },\n" + 
-        		"				{ \"id\": \"5004\", \"type\": \"Maple\" }\n" + 
-        		"			]\n" + 
-        		"	},\n" + 
-        		"	{\n" + 
-        		"		\"id\": \"0003\",\n" + 
-        		"		\"type\": \"donut\",\n" + 
-        		"		\"name\": \"Old Fashioned\",\n" + 
-        		"		\"ppu\": 0.55,\n" + 
-        		"		\"batters\":\n" + 
-        		"			{\n" + 
-        		"				\"batter\":\n" + 
-        		"					[\n" + 
-        		"						{ \"id\": \"1001\", \"type\": \"Regular\" },\n" + 
-        		"						{ \"id\": \"1002\", \"type\": \"Chocolate\" }\n" + 
-        		"					]\n" + 
-        		"			},\n" + 
-        		"		\"topping\":\n" + 
-        		"			[\n" + 
-        		"				{ \"id\": \"5001\", \"type\": \"None\" },\n" + 
-        		"				{ \"id\": \"5002\", \"type\": \"Glazed\" },\n" + 
-        		"				{ \"id\": \"5003\", \"type\": \"Chocolate\" },\n" + 
-        		"				{ \"id\": \"5004\", \"type\": \"Maple\" }\n" + 
-        		"			]\n" + 
-        		"	}\n" + 
-        		"]";
+                "    {\n" + 
+                "        \"id\": \"0001\",\n" + 
+                "        \"type\": \"donut\",\n" + 
+                "        \"name\": \"Cake\",\n" + 
+                "        \"ppu\": 0.55,\n" + 
+                "        \"batters\":\n" + 
+                "            {\n" + 
+                "                \"batter\":\n" + 
+                "                    [\n" + 
+                "                        { \"id\": \"1001\", \"type\": \"Regular\" },\n" + 
+                "                        { \"id\": \"1002\", \"type\": \"Chocolate\" },\n" + 
+                "                        { \"id\": \"1003\", \"type\": \"Blueberry\" },\n" + 
+                "                        { \"id\": \"1004\", \"type\": \"Devil's Food\" }\n" + 
+                "                    ]\n" + 
+                "            },\n" + 
+                "        \"topping\":\n" + 
+                "            [\n" + 
+                "                { \"id\": \"5001\", \"type\": \"None\" },\n" + 
+                "                { \"id\": \"5002\", \"type\": \"Glazed\" },\n" + 
+                "                { \"id\": \"5005\", \"type\": \"Sugar\" },\n" + 
+                "                { \"id\": \"5007\", \"type\": \"Powdered Sugar\" },\n" + 
+                "                { \"id\": \"5006\", \"type\": \"Chocolate with Sprinkles\" },\n" + 
+                "                { \"id\": \"5003\", \"type\": \"Chocolate\" },\n" + 
+                "                { \"id\": \"5004\", \"type\": \"Maple\" }\n" + 
+                "            ]\n" + 
+                "    },\n" + 
+                "    {\n" + 
+                "        \"id\": \"0002\",\n" + 
+                "        \"type\": \"donut\",\n" + 
+                "        \"name\": \"Raised\",\n" + 
+                "        \"ppu\": 0.55,\n" + 
+                "        \"batters\":\n" + 
+                "            {\n" + 
+                "                \"batter\":\n" + 
+                "                    [\n" + 
+                "                        { \"id\": \"1001\", \"type\": \"Regular\" }\n" + 
+                "                    ]\n" + 
+                "            },\n" + 
+                "        \"topping\":\n" + 
+                "            [\n" + 
+                "                { \"id\": \"5001\", \"type\": \"None\" },\n" + 
+                "                { \"id\": \"5002\", \"type\": \"Glazed\" },\n" + 
+                "                { \"id\": \"5005\", \"type\": \"Sugar\" },\n" + 
+                "                { \"id\": \"5003\", \"type\": \"Chocolate\" },\n" + 
+                "                { \"id\": \"5004\", \"type\": \"Maple\" }\n" + 
+                "            ]\n" + 
+                "    },\n" + 
+                "    {\n" + 
+                "        \"id\": \"0003\",\n" + 
+                "        \"type\": \"donut\",\n" + 
+                "        \"name\": \"Old Fashioned\",\n" + 
+                "        \"ppu\": 0.55,\n" + 
+                "        \"batters\":\n" + 
+                "            {\n" + 
+                "                \"batter\":\n" + 
+                "                    [\n" + 
+                "                        { \"id\": \"1001\", \"type\": \"Regular\" },\n" + 
+                "                        { \"id\": \"1002\", \"type\": \"Chocolate\" }\n" + 
+                "                    ]\n" + 
+                "            },\n" + 
+                "        \"topping\":\n" + 
+                "            [\n" + 
+                "                { \"id\": \"5001\", \"type\": \"None\" },\n" + 
+                "                { \"id\": \"5002\", \"type\": \"Glazed\" },\n" + 
+                "                { \"id\": \"5003\", \"type\": \"Chocolate\" },\n" + 
+                "                { \"id\": \"5004\", \"type\": \"Maple\" }\n" + 
+                "            ]\n" + 
+                "    }\n" + 
+                "]";
         Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof List);
     }
-	
+    
     @Test
     public void testAdobe4() {
         String example = "{\n" + 
-        		"	\"id\": \"0001\",\n" + 
-        		"	\"type\": \"donut\",\n" + 
-        		"	\"name\": \"Cake\",\n" + 
-        		"	\"image\":\n" + 
-        		"		{\n" + 
-        		"			\"url\": \"images/0001.jpg\",\n" + 
-        		"			\"width\": 200,\n" + 
-        		"			\"height\": 200\n" + 
-        		"		},\n" + 
-        		"	\"thumbnail\":\n" + 
-        		"		{\n" + 
-        		"			\"url\": \"images/thumbnails/0001.jpg\",\n" + 
-        		"			\"width\": 32,\n" + 
-        		"			\"height\": 32\n" + 
-        		"		}\n" + 
-        		"}";
+                "    \"id\": \"0001\",\n" + 
+                "    \"type\": \"donut\",\n" + 
+                "    \"name\": \"Cake\",\n" + 
+                "    \"image\":\n" + 
+                "        {\n" + 
+                "            \"url\": \"images/0001.jpg\",\n" + 
+                "            \"width\": 200,\n" + 
+                "            \"height\": 200\n" + 
+                "        },\n" + 
+                "    \"thumbnail\":\n" + 
+                "        {\n" + 
+                "            \"url\": \"images/thumbnails/0001.jpg\",\n" + 
+                "            \"width\": 32,\n" + 
+                "            \"height\": 32\n" + 
+                "        }\n" + 
+                "}";
         Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
     }
-	
+    
     @Test
     public void testGoogle1() {
         String example = "{\n" + 
-        		"  \"apiVersion\": \"2.0\",\n" + 
-        		"  \"data\": {\n" + 
-        		"    \"updated\": \"2010-02-04T19:29:54.001Z\",\n" + 
-        		"    \"totalItems\": 6741,\n" + 
-        		"    \"startIndex\": 1,\n" + 
-        		"    \"itemsPerPage\": 1,\n" + 
-        		"    \"items\": [\n" + 
-        		"      {\n" + 
-        		"        \"id\": \"BGODurRfVv4\",\n" + 
-        		"        \"uploaded\": \"2009-11-17T20:10:06.000Z\",\n" + 
-        		"        \"updated\": \"2010-02-04T06:25:57.000Z\",\n" + 
-        		"        \"uploader\": \"docchat\",\n" + 
-        		"        \"category\": \"Animals\",\n" + 
-        		"        \"title\": \"From service dog to SURFice dog\",\n" + 
-        		"        \"description\": \"Surf dog Ricochets inspirational video ...\",\n" + 
-        		"        \"tags\": [\n" + 
-        		"          \"Surf dog\",\n" + 
-        		"          \"dog surfing\",\n" + 
-        		"          \"dog\",\n" + 
-        		"          \"golden retriever\",\n" + 
-        		"        ],\n" + 
-        		"        \"thumbnail\": {\n" + 
-        		"          \"default\": \"http://i.ytimg.com/vi/BGODurRfVv4/default.jpg\",\n" + 
-        		"          \"hqDefault\": \"http://i.ytimg.com/vi/BGODurRfVv4/hqdefault.jpg\"\n" + 
-        		"        },\n" + 
-        		"        \"player\": {\n" + 
-        		"          \"default\": \"http://www.youtube.com/watch?v=BGODurRfVv4&feature=youtube_gdata\",\n" + 
-        		"          \"mobile\": \"http://m.youtube.com/details?v=BGODurRfVv4\"\n" + 
-        		"        },\n" + 
-        		"        \"content\": {\n" + 
-        		"          \"1\": \"rtsp://v5.cache6.c.youtube.com/CiILENy73wIaGQn-Vl-0uoNjBBMYDSANFEgGUgZ2aWRlb3MM/0/0/0/video.3gp\",\n" + 
-        		"          \"5\": \"http://www.youtube.com/v/BGODurRfVv4?f=videos&app=youtube_gdata\",\n" + 
-        		"          \"6\": \"rtsp://v7.cache7.c.youtube.com/CiILENy73wIaGQn-Vl-0uoNjBBMYESARFEgGUgZ2aWRlb3MM/0/0/0/video.3gp\"\n" + 
-        		"        },\n" + 
-        		"        \"duration\": 315,\n" + 
-        		"        \"rating\": 4.96,\n" + 
-        		"        \"ratingCount\": 2043,\n" + 
-        		"        \"viewCount\": 1781691,\n" + 
-        		"        \"favoriteCount\": 3363,\n" + 
-        		"        \"commentCount\": 1007,\n" + 
-        		"        \"commentsAllowed\": true\n" + 
-        		"      }\n" + 
-        		"    ]\n" + 
-        		"  }\n" + 
-        		"}";
+                "  \"apiVersion\": \"2.0\",\n" + 
+                "  \"data\": {\n" + 
+                "    \"updated\": \"2010-02-04T19:29:54.001Z\",\n" + 
+                "    \"totalItems\": 6741,\n" + 
+                "    \"startIndex\": 1,\n" + 
+                "    \"itemsPerPage\": 1,\n" + 
+                "    \"items\": [\n" + 
+                "      {\n" + 
+                "        \"id\": \"BGODurRfVv4\",\n" + 
+                "        \"uploaded\": \"2009-11-17T20:10:06.000Z\",\n" + 
+                "        \"updated\": \"2010-02-04T06:25:57.000Z\",\n" + 
+                "        \"uploader\": \"docchat\",\n" + 
+                "        \"category\": \"Animals\",\n" + 
+                "        \"title\": \"From service dog to SURFice dog\",\n" + 
+                "        \"description\": \"Surf dog Ricochets inspirational video ...\",\n" + 
+                "        \"tags\": [\n" + 
+                "          \"Surf dog\",\n" + 
+                "          \"dog surfing\",\n" + 
+                "          \"dog\",\n" + 
+                "          \"golden retriever\",\n" + 
+                "        ],\n" + 
+                "        \"thumbnail\": {\n" + 
+                "          \"default\": \"http://i.ytimg.com/vi/BGODurRfVv4/default.jpg\",\n" + 
+                "          \"hqDefault\": \"http://i.ytimg.com/vi/BGODurRfVv4/hqdefault.jpg\"\n" + 
+                "        },\n" + 
+                "        \"player\": {\n" + 
+                "          \"default\": \"http://www.youtube.com/watch?v=BGODurRfVv4&feature=youtube_gdata\",\n" + 
+                "          \"mobile\": \"http://m.youtube.com/details?v=BGODurRfVv4\"\n" + 
+                "        },\n" + 
+                "        \"content\": {\n" + 
+                "          \"1\": \"rtsp://v5.cache6.c.youtube.com/CiILENy73wIaGQn-Vl-0uoNjBBMYDSANFEgGUgZ2aWRlb3MM/0/0/0/video.3gp\",\n" + 
+                "          \"5\": \"http://www.youtube.com/v/BGODurRfVv4?f=videos&app=youtube_gdata\",\n" + 
+                "          \"6\": \"rtsp://v7.cache7.c.youtube.com/CiILENy73wIaGQn-Vl-0uoNjBBMYESARFEgGUgZ2aWRlb3MM/0/0/0/video.3gp\"\n" + 
+                "        },\n" + 
+                "        \"duration\": 315,\n" + 
+                "        \"rating\": 4.96,\n" + 
+                "        \"ratingCount\": 2043,\n" + 
+                "        \"viewCount\": 1781691,\n" + 
+                "        \"favoriteCount\": 3363,\n" + 
+                "        \"commentCount\": 1007,\n" + 
+                "        \"commentsAllowed\": true\n" + 
+                "      }\n" + 
+                "    ]\n" + 
+                "  }\n" + 
+                "}";
         Object map = JsonUtil.parseJson(example);
         Assert.assertTrue(map instanceof Map);
         Assert.assertEquals(JsonUtil.getStringFromMap("data.items[0].id", (Map<?, ?>) map), "BGODurRfVv4");
         Assert.assertEquals(JsonUtil.getStringFromMap("data.items[0].tags[1]", (Map<?, ?>) map), "dog surfing");
         Assert.assertTrue(JsonUtil.getBoolFromMap("data.items[0].commentsAllowed", (Map<?, ?>) map));
+    }
+    
+    // A technical test to test the handling of an IOException in the 
+    // main JSON parsing routine.
+    // Code coverage.
+    @Test(expected=IllegalArgumentException.class)
+    public void parseIOExceptionTest() throws Exception {
+        // The tokenizer will immediately fail.
+        //
+        StreamTokenizer st = mock(StreamTokenizer.class);
+        when(st.nextToken()).thenThrow(new IOException("Mock Tokenizer Error"));
+        //
+        StringBuilder parsed = new StringBuilder();
+        JsonUtil.parseJson(st, parsed);
+        //
+        // We should never arrive here.
+    }
+    
+    // A technical test to invoke an IOException while parsing a JSON object.
+    // It is used to test the exception handling in the object parsing procedure.
+    // Code coverage.
+    @Test(expected=IllegalArgumentException.class)
+    public void parseIOExceptionTest2() throws Exception {
+        // Create a real tokenizer first.
+        final StreamTokenizer st = Mockito.spy(new StreamTokenizer(new StringReader("")));
+        // Overwrite the tokenizer behavior. The first tree tokens will behave as the start
+        // of a JSON object, but the fourth invocation will throw an exception.
+        Answer<?> answer = new Answer<Object>() {
+            private int counter = 0;
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                switch(counter) {
+                case 0:
+                    st.ttype = '{';
+                    st.sval = "{";
+                    break;
+                case 1:
+                case 2:
+                    st.ttype = '"';
+                    st.sval = "key";
+                    break;
+                default: 
+                    throw new IOException("Got you!");
+                }
+                counter++;
+                return null;
+            }
+        };
+        // Impose the mocking behavior on the real tokenizer using
+        // the Mockito framework.
+        Mockito.doAnswer(answer).when(st).nextToken();
+        //
+        StringBuilder parsed = new StringBuilder();
+        JsonUtil.parseJson(st, parsed);
+        //
+        // We should never arrive here.
+    }
+    
+    // A technical test to invoke an IOException while parsing a JSON list.
+    // It is used to test the exception handling in the list parsing procedure.
+    // Code coverage.
+    @Test(expected=IllegalArgumentException.class)
+    public void parseIOExceptionTest3() throws Exception {
+        // Create a real tokenizer first.
+        final StreamTokenizer st = Mockito.spy(new StreamTokenizer(new StringReader("")));
+        // Overwrite the tokenizer behavior. The first tree tokens will behave as the start
+        // of a JSON list, but the fourth invocation will throw an exception.
+        Answer<?> answer = new Answer<Object>() {
+            private int counter = 0;
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                switch(counter) {
+                case 0:
+                    st.ttype = '[';
+                    st.sval = "[";
+                    break;
+                case 1:
+                case 2:
+                    st.ttype = '"';
+                    st.sval = "key";
+                    break;
+                default: 
+                    throw new IOException("Got you!");
+                }
+                counter++;
+                return null;
+            }
+        };
+        // Impose the mocking behavior on the real tokenizer using
+        // the Mockito framework.
+        Mockito.doAnswer(answer).when(st).nextToken();
+        //
+        StringBuilder parsed = new StringBuilder();
+        JsonUtil.parseJson(st, parsed);
+        //
+        // We should never arrive here.
+    }
+    
+    @Test
+    public void bufferedReaderParserTest() {
+        Object obj = JsonUtil.parseJson(new BufferedReader(new StringReader("{}")));
+        Assert.assertNotNull(obj);
     }
 }

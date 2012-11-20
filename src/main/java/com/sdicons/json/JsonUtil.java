@@ -1,5 +1,11 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Bruno Ranschaert
+ * Released under the MIT License: http://opensource.org/licenses/MIT
+ * Library "jsonutil"
+ ******************************************************************************/
 package com.sdicons.json;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
@@ -165,10 +171,24 @@ public final class JsonUtil {
         StringBuilder parsed = new StringBuilder(data.length());
         return parseJson(st, parsed);
     }
+     
+    /**
+     * Convert a JSON string into a nested structure of Map instances.
+     * 
+     * @param data
+     *            The JSON text stream.
+     * @return A nested data structure of Map/List instances.
+     * 
+     */
+    public static Object parseJson(BufferedReader reader) {
+        StreamTokenizer st = new StreamTokenizer(reader);
+        StringBuilder parsed = new StringBuilder();
+        return parseJson(st, parsed);
+    }
 
     // The parsing workhorse.
     //
-    private static Object parseJson(StreamTokenizer st, StringBuilder parsed) {
+    protected static Object parseJson(StreamTokenizer st, StringBuilder parsed) {
         // This is the top-level of the JSON parser, it decides which kind of
         // JSON expression is next in the input stream. The general strategy
         // is to look at the first characters, make a decision about which
@@ -176,8 +196,7 @@ public final class JsonUtil {
         // we expect and call the appropriate expression parser. In order to
         // make sure
         // the individual expression parsers see the whole expression we push
-        // back
-        // the tokens we used to make the decision.
+        // back the tokens we used to make the decision.
         // Each JSON expression type should have an entry here.
         try {
             st.nextToken();
@@ -737,16 +756,38 @@ public final class JsonUtil {
      * It represents a compiled path of the form "a.b.c[12][12].d". It is a good
      * idea to compile the path expressions to access the nested map structures
      * if the paths are used multiple times.
-     * 
      */
     public static interface PathResolver {
+        /**
+         * Do a lookup of the path in the container and return the result.
+         * 
+         * @param container The container in which to resolve the path.
+         * @return The resulting object.
+         */
         Object get(Object container);
-
+        
+        /**
+         * Put a value in the container as specified in the path reference.
+         * If intermediate containers can be created, they will be created as well.
+         * 
+         * @param container The container in which we want to store a value.
+         * @param value The value we want to put in the container.
+         */
         void put(Object container, Object value);
-
+        
+        /**
+         * Create a container corresponding to the current path. The type of 
+         * the container depends on the type of the resolver. Indexed resolvers will create array
+         * like structures, property resolvers will create map structures.
+         * @return
+         */
         Object createContainer();
     }
 
+    /*
+     * Resolver for a single property name in a map.
+     * @see JsonUtil.PathResolver
+     */
     private static class PropResolver implements PathResolver {
         private String property = null;
 
@@ -759,13 +800,19 @@ public final class JsonUtil {
                 throw new IllegalArgumentException("Container should be a Map instance.");
             }
         }
-
+        
+        /*
+         * @see JsonUtil.PathResolver#get(Object)
+         */
         public Object get(Object container) {
             check(container);
             Map<?, ?> map = (Map<?, ?>) container;
             return map.get(property);
         }
 
+        /*
+         * @see JsonUtil.PathResolver#put(Object, Object)
+         */
         public void put(Object container, Object value) {
             check(container);
             @SuppressWarnings("unchecked")
@@ -773,11 +820,18 @@ public final class JsonUtil {
             map.put(property, value);
         }
 
+        /** 
+         * @see JsonUtil.PathResolver#createContainer()
+         */
         public Object createContainer() {
             return new LinkedHashMap<Object, Object>();
         }
     }
 
+    /*
+     * Resolver for a single index in an array. 
+     * @see JsonUtil.PathResolver
+     */
     private static class IndexResolver implements PathResolver {
         private int index;
 
@@ -792,9 +846,7 @@ public final class JsonUtil {
         }
 
         /*
-         * (non-Javadoc)
-         * 
-         * @see com.sdicons.json.JsonUtil.PathResolver#get(java.lang.Object)
+         * @see JsonUtil.PathResolver#get(java.lang.Object)
          */
         public Object get(Object container) {
             check(container);
@@ -807,6 +859,9 @@ public final class JsonUtil {
             }
         }
 
+        /*
+         * @see JsonUtil.PathResolver#put(Object, Object)
+         */
         public void put(Object container, Object value) {
             check(container);
             @SuppressWarnings("unchecked")
@@ -815,11 +870,19 @@ public final class JsonUtil {
             list.add(index, value);
         }
 
+        /*
+         * @see JsonUtil.PathResolver#createContainer()
+         */
         public Object createContainer() {
             return new ArrayList<Object>();
         }
     }
 
+    /*
+     * Composite resolver, a sequence of resolvers. Complex paths are formed
+     * by making a composition of the simple resolvers.
+     * @see JsonUtil.PathResolver
+     */
     private static class CompositeResolver implements PathResolver {
         private PathResolver[] resolvers;
 
@@ -827,6 +890,9 @@ public final class JsonUtil {
             this.resolvers = resolvers;
         }
 
+        /*
+         * @see JsonUtil.PathResolver#get(Object)
+         */
         public Object get(Object container) {
             Object intermediate = container;
             for (int i = 0; i < resolvers.length; i++) {
@@ -839,18 +905,23 @@ public final class JsonUtil {
             return intermediate;
         }
 
+        /* 
+         * @see JsonUtil.PathResolver#put(Object, Object)
+         */
         public void put(Object container, Object value) {
             Object intermediate = container;
             for (int i = 0; i < (resolvers.length - 1); i++) {
                 if (intermediate == null) {
                     // Can not proceed ...
-                    throw new IllegalArgumentException("The value cannot be inserted in this container, it is impossible to create extra nodes.");
-                } else {
+                    throw new IllegalArgumentException("The value cannot be inserted in this container, there is no container to attach new nodes.");
+                } 
+                else {
                     Object candidate = resolvers[i].get(intermediate);
                     if (candidate != null) {
                         // We are fine.
                         intermediate = candidate;
-                    } else if (candidate == null && (i < resolvers.length - 1)) {
+                    } 
+                    else if (candidate == null && (i < resolvers.length - 1)) {
                         // We will create a new node.
                         candidate = resolvers[i + 1].createContainer();
                         if (candidate == null) {
@@ -859,7 +930,8 @@ public final class JsonUtil {
                         }
                         resolvers[i].put(intermediate, candidate);
                         intermediate = candidate;
-                    } else {
+                    } 
+                    else {
                         // Cannot proceed, we don't know the type of the new
                         // node.
                         throw new IllegalArgumentException("It is not possible to create a new intermediary container.");
@@ -870,21 +942,38 @@ public final class JsonUtil {
             resolvers[resolvers.length - 1].put(intermediate, value);
         }
 
+        /*
+         * @see JsonUtil.PathResolver#createContainer()
+         */
         public Object createContainer() {
             return null;
         }
     }
 
+    /*
+     * A resolver that resolves to itself.
+     * @see JsonUtil.PathResolver
+     */
     private static class IdentityResolver implements PathResolver {
+        
+        /*
+         * @see JsonUtil.PathResolver#get(Object)
+         */
         public Object get(Object container) {
             return container;
         }
 
+        /*
+         * @see com.sdicons.json.JsonUtil.PathResolver#put(java.lang.Object, java.lang.Object)
+         */
         public void put(Object container, Object value) {
             // Cannot put something in here.
             throw new IllegalArgumentException("You cannot put something in this resolver.");
         }
 
+        /*
+         * @see com.sdicons.json.JsonUtil.PathResolver#createContainer()
+         */
         public Object createContainer() {
             return null;
         }
