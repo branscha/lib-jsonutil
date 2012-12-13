@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -314,6 +315,22 @@ public class JsonUtilTest {
     public void renderIntegerTest() {
         String json = JsonUtil.convertToJson(123);
         Assert.assertEquals("Expected '123' since it is a valid JSON identifier.", "123", json);
+    }
+    
+    @Test
+    public void parseFloatTest() {
+        String json = "3.1415e+3";
+        Object num = JsonUtil.parseJson(json);
+        Assert.assertTrue(num instanceof BigDecimal);
+        Assert.assertEquals(((BigDecimal) num).floatValue(), new BigDecimal("3141.5").floatValue());
+    }
+    
+    @Test
+    public void parseFloatTest2() {
+        String json = "3.1415e-3";
+        Object num = JsonUtil.parseJson(json);
+        Assert.assertTrue(num instanceof BigDecimal);
+        Assert.assertEquals(((BigDecimal) num).floatValue(), new BigDecimal("0.0031415").floatValue());
     }
 
     @Test

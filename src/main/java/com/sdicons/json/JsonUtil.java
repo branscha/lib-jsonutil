@@ -9,6 +9,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -213,9 +215,39 @@ public final class JsonUtil {
                 return parseJsonList(st, parsed);
             case StreamTokenizer.TT_NUMBER:
                 // Plain JSON Number.
+                // We must take care of exponential notation as well
                 //
-                parsed.append(st.nval);
-                return st.nval;
+                double num = st.nval;
+                parsed.append(num);
+                int exp = 0;
+                st.ordinaryChars('\0', ' ');
+                st.wordChars('+', '+');
+                st.nextToken();
+                st.whitespaceChars('\0', ' ');
+                st.ordinaryChars('+', '+');
+                if (st.ttype == StreamTokenizer.TT_WORD && Character.toUpperCase(st.sval.charAt(0)) == 'E') {
+                    String sss = st.sval;
+                    try {
+                        if (sss.charAt(1) == '+')
+                            exp = Integer.parseInt(sss.substring(2));
+                        else
+                            exp = Integer.parseInt(sss.substring(1));
+                    }
+                    catch (NumberFormatException e) {
+                        st.pushBack();
+                    }
+                }
+                else if (st.ttype < 0 || st.ttype > ' ') st.pushBack();
+                num =  num*Math.pow(10,exp);
+                // Plain JSON Number.
+                //
+                BigDecimal number = new BigDecimal(num);
+                try {
+                    return number.toBigIntegerExact();
+                }
+                catch (ArithmeticException e) {
+                    return number;
+                }
             case '"':
                 // JSON String expression.
                 //
@@ -232,14 +264,17 @@ public final class JsonUtil {
                 if ("false".equalsIgnoreCase(st.sval)) {
                     // JSON boolean "false" constant.
                     //
+                    parsed.append("false");
                     return Boolean.FALSE;
                 } else if ("true".equalsIgnoreCase(st.sval)) {
                     // JSON boolean "true" constant.
                     //
+                    parsed.append("true");
                     return Boolean.TRUE;
                 } else if (NULL_LITERAL.equalsIgnoreCase(st.sval)) {
                     // JSON null.
                     //
+                    parsed.append("null");
                     return null;
                 } else {
                     throw new IllegalArgumentException(String.format(JSON001, parsed.toString()));
@@ -456,18 +491,26 @@ public final class JsonUtil {
         if (result == null) {
             // The value was null, we can quickly return.
             return null;
-        } else if (result instanceof Integer) {
+        } 
+        else if (result instanceof BigInteger) {
+            return ((BigInteger) result).intValue();
+            
+        } 
+        else if (result instanceof Integer) {
             // The value is actually an integer, no conversions needed.
             return (Integer) result;
-        } else if (result instanceof String) {
+        } 
+        else if (result instanceof String) {
             // We try to parse string values into boolean values.
             // String -> Integer coercion.
             try {
                 return Integer.parseInt((String) result);
-            } catch (NumberFormatException e) {
+            } 
+            catch (NumberFormatException e) {
                 return null;
             }
-        } else if (result instanceof Double) {
+        } 
+        else if (result instanceof Double) {
             // We try to interpret Doubles as Integers.
             // Double -> Integer coercion.
             return (int) Math.round((Double) result);
