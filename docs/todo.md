@@ -1,4 +1,10 @@
 # Project Tasks
+## To Do
+
+-
+
+## Done
+### Version 1.1
 
 * 2012-12-12: Fix parsing of atomic values: true, false, null. Don't forget to append these to the buffer so that the error message is correclty formatted. Parsing eg. [ true, false, bad ] will give error message [,, X <- because the values were not appended to the buffer.
 * 2012-12-01: Fix parsing of scientific notation 2233.4343E+7. It was already fixed in the lib-jsontools.

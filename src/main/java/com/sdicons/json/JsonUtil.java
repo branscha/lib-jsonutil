@@ -38,6 +38,7 @@ public final class JsonUtil {
     private static final String JSON001 = "JSON001: Unexpected content encountered.\nContext: %s X <--ERROR";
     private static final String JSON002 = "JSON002: Input error during parsing.\nContext: %s X <--ERROR";
     private static final String JSON003 = "JSON003: Expected symbol '%s' but received token/symbol '%s'.\nContext: %s X <--ERROR";
+    private static final String JSON004 = "JSON004: The key of a JSON object should be a String.\nContext: %s X <--ERROR";
 
     // Prevent the utility class from being instantiated.
     //
@@ -300,6 +301,9 @@ public final class JsonUtil {
                 // Key.
                 st.pushBack();
                 final Object key = parseJson(st, parsed);
+                if(!(key instanceof String)) {
+                    throw new IllegalArgumentException(String.format(JSON004, parsed.toString()));
+                }
 
                 // Colon.
                 st.nextToken();
