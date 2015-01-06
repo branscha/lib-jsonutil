@@ -1,33 +1,25 @@
 /*******************************************************************************
- * Copyright (c) 2012 Bruno Ranschaert
+ * Copyright (c) 2012-2015 Bruno Ranschaert
  * Released under the MIT License: http://opensource.org/licenses/MIT
  * Library "jsonutil"
  ******************************************************************************/
 package com.sdicons.json;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StreamTokenizer;
-import java.io.StringReader;
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
+import com.sdicons.json.JsonUtil.PathResolver;
 import junit.framework.Assert;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.sdicons.json.JsonUtil.PathResolver;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
+import java.util.*;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class JsonUtilTest {
 
@@ -38,7 +30,7 @@ public class JsonUtilTest {
         JsonUtil.putObjectInMap("level1.level2.level3.voornaam", map, "Bruno");
         JsonUtil.putObjectInMap("level1.achternaam", map, "Ranschaert");
         JsonUtil.putObjectInMap("level1.level2.level3.straat", map, "Hakelenberg");
-        JsonUtil.putObjectInMap("level1.huisnr", map, Integer.valueOf(4));
+        JsonUtil.putObjectInMap("level1.huisnr", map, 4);
         JsonUtil.putObjectInMap("level1.level2.married", map, Boolean.TRUE);
 
         Assert.assertTrue(map.containsKey("level1") && map.get("level1") instanceof Map);
@@ -108,10 +100,13 @@ public class JsonUtilTest {
         JsonUtil.putObjectInMap("level1.level2.level3.voornaam", map, "Bruno");
         JsonUtil.putObjectInMap("level1.achternaam", map, "Ranschaert");
         JsonUtil.putObjectInMap("level1.level2.level3.straat", map, "Hakelenberg");
-        JsonUtil.putObjectInMap("level1.huisnr", map, Integer.valueOf(4));
+        JsonUtil.putObjectInMap("level1.huisnr", map, 4);
+        JsonUtil.putObjectInMap("level1.busnr", map, 13L);
+        JsonUtil.putObjectInMap("level1.pi", map, 3.1415);
         JsonUtil.putObjectInMap("level1.level2.married", map, Boolean.TRUE);
         JsonUtil.putObjectInMap("level1.level2.list[0]", map, Boolean.FALSE);
         JsonUtil.putObjectInMap("level1.level2.list[3]", map, 3);
+        JsonUtil.putObjectInMap("level1.level2.list[4]", map, 17L);
         JsonUtil.putObjectInMap("level1.level2.list[7]", map, "7");
         JsonUtil.putObjectInMap("level1.level2.objlst[0].hallo.nl", map, "wereld");
         JsonUtil.putObjectInMap("level1.level2.objlst[0].hallo.en", map, "world");
@@ -124,10 +119,14 @@ public class JsonUtilTest {
         Assert.assertEquals("Hakelenberg", JsonUtil.getStringFromMap("level1.level2.level3.straat", map));
         Assert.assertEquals("Ranschaert", JsonUtil.getStringFromMap("level1.achternaam", map));
         Assert.assertEquals(4, (int) JsonUtil.getIntFromMap("level1.huisnr", map));
+        Assert.assertEquals(13L, (long) JsonUtil.getLongFromMap("level1.busnr", map));
+        Assert.assertEquals(3.1415f, JsonUtil.getFloatFromMap("level1.pi", map));
+        Assert.assertEquals(3.1415, JsonUtil.getDoubleFromMap("level1.pi", map));
 
         Assert.assertTrue(JsonUtil.getObjectFromMap("level1.level2.list", map) instanceof List);
         Assert.assertEquals(false, (boolean) JsonUtil.getBoolFromMap("level1.level2.list[0]", map));
         Assert.assertEquals(3, (int) JsonUtil.getIntFromMap("level1.level2.list[3]", map));
+        Assert.assertEquals(17L, (long) JsonUtil.getIntFromMap("level1.level2.list[4]", map));
         Assert.assertEquals("7", JsonUtil.getStringFromMap("level1.level2.list[7]", map));
 
         Assert.assertTrue(JsonUtil.getObjectFromMap("level1.level2.objlst", map) instanceof List);
@@ -321,16 +320,16 @@ public class JsonUtilTest {
     public void parseFloatTest() {
         String json = "3.1415e+3";
         Object num = JsonUtil.parseJson(json);
-        Assert.assertTrue(num instanceof BigDecimal);
-        Assert.assertEquals(((BigDecimal) num).floatValue(), new BigDecimal("3141.5").floatValue());
+        Assert.assertTrue(num instanceof Double);
+        Assert.assertEquals(((Double) num).floatValue(), new Double("3141.5").floatValue());
     }
     
     @Test
     public void parseFloatTest2() {
         String json = "3.1415e-3";
         Object num = JsonUtil.parseJson(json);
-        Assert.assertTrue(num instanceof BigDecimal);
-        Assert.assertEquals(((BigDecimal) num).floatValue(), new BigDecimal("0.0031415").floatValue());
+        Assert.assertTrue(num instanceof Double);
+        Assert.assertEquals(((Double) num).floatValue(), new Double("0.0031415").floatValue());
     }
 
     @Test
