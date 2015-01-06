@@ -517,6 +517,95 @@ public final class JsonUtil {
         return null;
     }
 
+    public static Long getLongFromMap(String path, Map<?, ?> map) {
+        final PathResolver resolver = compilePath(path);
+        return getLongFromMap(resolver, map);
+    }
+
+    public static Long getLongFromMap(PathResolver path, Map<?, ?> map) {
+        // First we attempt to lookup the value, whatever the type.
+        //
+        final Object result = getObjectFromMap(path, map);
+
+        // We will try to convert the value into an Integer.
+        //
+        if (result == null) {
+            // The value was null, we can quickly return.
+            return null;
+        }
+        else if(result instanceof Long) {
+            return (Long) result;
+        }
+        else if (result instanceof Integer) {
+            return ((Integer) result).longValue();
+        }
+        else if (result instanceof String) {
+            // We try to parse string values into boolean values.
+            // String -> Integer coercion.
+            try {
+                return Long.parseLong((String) result);
+            }
+            catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        else if (result instanceof Double) {
+            // We try to interpret Doubles as Integers.
+            // Double -> Integer coercion.
+            return Math.round((Double) result);
+        }
+        return null;
+    }
+
+    public static Double getDoubleFromMap(String path, Map<?, ?> map) {
+        final PathResolver resolver = compilePath(path);
+        return getDoubleFromMap(resolver, map);
+    }
+
+    public static Double getDoubleFromMap(PathResolver path, Map<?, ?> map) {
+        // First we attempt to lookup the value, whatever the type.
+        //
+        final Object result = getObjectFromMap(path, map);
+
+        // We will try to convert the value into an Integer.
+        //
+        if (result == null) {
+            // The value was null, we can quickly return.
+            return null;
+        }
+        else if(result instanceof Long) {
+            return ((Long) result).doubleValue();
+        }
+        else if (result instanceof Integer) {
+            return ((Integer) result).doubleValue();
+        }
+        else if (result instanceof String) {
+            // We try to parse string values into boolean values.
+            // String -> Integer coercion.
+            try {
+                return Double.parseDouble((String) result);
+            }
+            catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        else if (result instanceof Double) {
+            // We try to interpret Doubles as Integers.
+            // Double -> Integer coercion.
+            return ((Double) result);
+        }
+        return null;
+    }
+
+    public static Float getFloatFromMap(String path, Map<?, ?> map) {
+        final PathResolver resolver = compilePath(path);
+        return getFloatFromMap(resolver, map);
+    }
+
+    public static Float getFloatFromMap(PathResolver path, Map<?, ?> map) {
+        return getDoubleFromMap(path, map).floatValue();
+    }
+
     /**
      * Utility method to fetch a Boolean value from a nested Map structure. The
      * path should have the form "part1.part2.part3".

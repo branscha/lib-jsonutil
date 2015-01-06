@@ -101,9 +101,12 @@ public class JsonUtilTest {
         JsonUtil.putObjectInMap("level1.achternaam", map, "Ranschaert");
         JsonUtil.putObjectInMap("level1.level2.level3.straat", map, "Hakelenberg");
         JsonUtil.putObjectInMap("level1.huisnr", map, 4);
+        JsonUtil.putObjectInMap("level1.busnr", map, 13L);
+        JsonUtil.putObjectInMap("level1.pi", map, 3.1415);
         JsonUtil.putObjectInMap("level1.level2.married", map, Boolean.TRUE);
         JsonUtil.putObjectInMap("level1.level2.list[0]", map, Boolean.FALSE);
         JsonUtil.putObjectInMap("level1.level2.list[3]", map, 3);
+        JsonUtil.putObjectInMap("level1.level2.list[4]", map, 17L);
         JsonUtil.putObjectInMap("level1.level2.list[7]", map, "7");
         JsonUtil.putObjectInMap("level1.level2.objlst[0].hallo.nl", map, "wereld");
         JsonUtil.putObjectInMap("level1.level2.objlst[0].hallo.en", map, "world");
@@ -116,10 +119,14 @@ public class JsonUtilTest {
         Assert.assertEquals("Hakelenberg", JsonUtil.getStringFromMap("level1.level2.level3.straat", map));
         Assert.assertEquals("Ranschaert", JsonUtil.getStringFromMap("level1.achternaam", map));
         Assert.assertEquals(4, (int) JsonUtil.getIntFromMap("level1.huisnr", map));
+        Assert.assertEquals(13L, (long) JsonUtil.getLongFromMap("level1.busnr", map));
+        Assert.assertEquals(3.1415f, JsonUtil.getFloatFromMap("level1.pi", map));
+        Assert.assertEquals(3.1415, JsonUtil.getDoubleFromMap("level1.pi", map));
 
         Assert.assertTrue(JsonUtil.getObjectFromMap("level1.level2.list", map) instanceof List);
         Assert.assertEquals(false, (boolean) JsonUtil.getBoolFromMap("level1.level2.list[0]", map));
         Assert.assertEquals(3, (int) JsonUtil.getIntFromMap("level1.level2.list[3]", map));
+        Assert.assertEquals(17L, (long) JsonUtil.getIntFromMap("level1.level2.list[4]", map));
         Assert.assertEquals("7", JsonUtil.getStringFromMap("level1.level2.list[7]", map));
 
         Assert.assertTrue(JsonUtil.getObjectFromMap("level1.level2.objlst", map) instanceof List);
