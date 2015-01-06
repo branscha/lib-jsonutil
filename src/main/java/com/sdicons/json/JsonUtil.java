@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012 Bruno Ranschaert
+ * Copyright (c) 2012-2015 Bruno Ranschaert
  * Released under the MIT License: http://opensource.org/licenses/MIT
  * Library "jsonutil"
  ******************************************************************************/
@@ -9,15 +9,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -178,7 +171,7 @@ public final class JsonUtil {
     /**
      * Convert a JSON string into a nested structure of Map instances.
      * 
-     * @param data
+     * @param reader
      *            The JSON text stream.
      * @return A nested data structure of Map/List instances.
      * 
@@ -240,14 +233,17 @@ public final class JsonUtil {
                 }
                 else if (st.ttype < 0 || st.ttype > ' ') st.pushBack();
                 num =  num*Math.pow(10,exp);
-                // Plain JSON Number.
+                // Convert the Double num into the smallest number type without loosing precision.
+                // Integer, Long, Double.
                 //
-                BigDecimal number = new BigDecimal(num);
-                try {
-                    return number.toBigIntegerExact();
-                }
-                catch (ArithmeticException e) {
-                    return number;
+                if ((num == Math.floor(num)) && !Double.isInfinite(num)) {
+                    // Integer type can be used: Integer or Long.
+                    final long long_num = (long) Math.floor(num);
+                    if (long_num >= Integer.MIN_VALUE && long_num <= Integer.MAX_VALUE) return (int) long_num;
+                    else return long_num;
+                } else {
+                    // Stick with double.
+                    return num;
                 }
             case '"':
                 // JSON String expression.
@@ -495,11 +491,10 @@ public final class JsonUtil {
         if (result == null) {
             // The value was null, we can quickly return.
             return null;
-        } 
-        else if (result instanceof BigInteger) {
-            return ((BigInteger) result).intValue();
-            
-        } 
+        }
+        else if(result instanceof Long) {
+            return ((Long) result).intValue();
+        }
         else if (result instanceof Integer) {
             // The value is actually an integer, no conversions needed.
             return (Integer) result;
@@ -605,7 +600,7 @@ public final class JsonUtil {
      * exist. The path should have the form "part1.part2[123].part3". Existing
      * values can be overwritten in this way.
      * 
-     * @param path
+     * @param resolver
      *            The compiled path of the value.
      * @param map
      *            The map that should be filled in.
@@ -676,8 +671,8 @@ public final class JsonUtil {
      * the left and right sides, but the value is different.
      * </ul>
      * 
-     * @param left
-     * @param right
+     * @param left The first map in the comparison.
+     * @param right The second map in the comparison.
      * @return A list of differences.
      */
     public static List<String> compareMaps(Map<String, Object> left, Map<String, Object> right) {
@@ -826,7 +821,7 @@ public final class JsonUtil {
          * Create a container corresponding to the current path. The type of 
          * the container depends on the type of the resolver. Indexed resolvers will create array
          * like structures, property resolvers will create map structures.
-         * @return
+         * @return A new container object.
          */
         Object createContainer();
     }
@@ -942,11 +937,11 @@ public final class JsonUtil {
          */
         public Object get(Object container) {
             Object intermediate = container;
-            for (int i = 0; i < resolvers.length; i++) {
+            for (PathResolver resolver : resolvers) {
                 if (intermediate == null) {
                     return null;
                 } else {
-                    intermediate = resolvers[i].get(intermediate);
+                    intermediate = resolver.get(intermediate);
                 }
             }
             return intermediate;
@@ -968,7 +963,7 @@ public final class JsonUtil {
                         // We are fine.
                         intermediate = candidate;
                     } 
-                    else if (candidate == null && (i < resolvers.length - 1)) {
+                    else if (i < resolvers.length - 1) {
                         // We will create a new node.
                         candidate = resolvers[i + 1].createContainer();
                         if (candidate == null) {
@@ -1033,8 +1028,6 @@ public final class JsonUtil {
     // Pattern of an individual index "[123]"
     //
     private static final Pattern indexFormat = Pattern.compile("\\[\\s*(\\d+)\\s*\\]");
-    //
-    private static final PathResolver[] EMPTY_RESOLVER_ARR = new PathResolver[0];
 
     /**
      * Compile a path of the form "a.b[1].c[1][2]" into a resolver that can be
@@ -1046,7 +1039,7 @@ public final class JsonUtil {
      *            A string representing a path into a data structure of nested
      *            maps and arrays. The path can have the form "a.b.c" and each
      *            path segment can contain zero or more indices "a[1][2]"
-     * @return
+     * @return The compiled path or resolver.
      */
     public static PathResolver compilePath(String path) {
         // Root case.
@@ -1060,9 +1053,9 @@ public final class JsonUtil {
         // We will follow the path, part by part.
         //
         final String[] parts = path.split("\\.");
-        for (int i = 0; i < parts.length; i++) {
+        for (String part1 : parts) {
             // Isolate the part we are going to examine.
-            String part = parts[i].trim();
+            String part = part1.trim();
             //
             Matcher partMatcher = partFormat.matcher(part);
             if (partMatcher.matches()) {
@@ -1081,6 +1074,6 @@ public final class JsonUtil {
                 }
             }
         }
-        return new CompositeResolver(resolvers.toArray(EMPTY_RESOLVER_ARR));
+        return new CompositeResolver(resolvers.toArray(new PathResolver[resolvers.size()]));
     }
 }

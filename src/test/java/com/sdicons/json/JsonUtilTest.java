@@ -1,33 +1,25 @@
 /*******************************************************************************
- * Copyright (c) 2012 Bruno Ranschaert
+ * Copyright (c) 2012-2015 Bruno Ranschaert
  * Released under the MIT License: http://opensource.org/licenses/MIT
  * Library "jsonutil"
  ******************************************************************************/
 package com.sdicons.json;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StreamTokenizer;
-import java.io.StringReader;
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
+import com.sdicons.json.JsonUtil.PathResolver;
 import junit.framework.Assert;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.sdicons.json.JsonUtil.PathResolver;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
+import java.util.*;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class JsonUtilTest {
 
@@ -38,7 +30,7 @@ public class JsonUtilTest {
         JsonUtil.putObjectInMap("level1.level2.level3.voornaam", map, "Bruno");
         JsonUtil.putObjectInMap("level1.achternaam", map, "Ranschaert");
         JsonUtil.putObjectInMap("level1.level2.level3.straat", map, "Hakelenberg");
-        JsonUtil.putObjectInMap("level1.huisnr", map, Integer.valueOf(4));
+        JsonUtil.putObjectInMap("level1.huisnr", map, 4);
         JsonUtil.putObjectInMap("level1.level2.married", map, Boolean.TRUE);
 
         Assert.assertTrue(map.containsKey("level1") && map.get("level1") instanceof Map);
@@ -108,7 +100,7 @@ public class JsonUtilTest {
         JsonUtil.putObjectInMap("level1.level2.level3.voornaam", map, "Bruno");
         JsonUtil.putObjectInMap("level1.achternaam", map, "Ranschaert");
         JsonUtil.putObjectInMap("level1.level2.level3.straat", map, "Hakelenberg");
-        JsonUtil.putObjectInMap("level1.huisnr", map, Integer.valueOf(4));
+        JsonUtil.putObjectInMap("level1.huisnr", map, 4);
         JsonUtil.putObjectInMap("level1.level2.married", map, Boolean.TRUE);
         JsonUtil.putObjectInMap("level1.level2.list[0]", map, Boolean.FALSE);
         JsonUtil.putObjectInMap("level1.level2.list[3]", map, 3);
@@ -321,16 +313,16 @@ public class JsonUtilTest {
     public void parseFloatTest() {
         String json = "3.1415e+3";
         Object num = JsonUtil.parseJson(json);
-        Assert.assertTrue(num instanceof BigDecimal);
-        Assert.assertEquals(((BigDecimal) num).floatValue(), new BigDecimal("3141.5").floatValue());
+        Assert.assertTrue(num instanceof Double);
+        Assert.assertEquals(((Double) num).floatValue(), new Double("3141.5").floatValue());
     }
     
     @Test
     public void parseFloatTest2() {
         String json = "3.1415e-3";
         Object num = JsonUtil.parseJson(json);
-        Assert.assertTrue(num instanceof BigDecimal);
-        Assert.assertEquals(((BigDecimal) num).floatValue(), new BigDecimal("0.0031415").floatValue());
+        Assert.assertTrue(num instanceof Double);
+        Assert.assertEquals(((Double) num).floatValue(), new Double("0.0031415").floatValue());
     }
 
     @Test
