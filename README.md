@@ -1,4 +1,4 @@
-# JSON Utilities v1.1
+# JSON Utilities
 ## A toolbox to parse and render JSON text
 ### Short Description
 
