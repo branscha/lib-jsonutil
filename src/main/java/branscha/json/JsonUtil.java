@@ -1,9 +1,9 @@
 /*******************************************************************************
- * Copyright (c) 2012-2015 Bruno Ranschaert
+ * Copyright (c) 2012-2020 Bruno Ranschaert
  * Released under the MIT License: http://opensource.org/licenses/MIT
  * Library "jsonutil"
  ******************************************************************************/
-package com.sdicons.json;
+package branscha.json;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -351,7 +351,7 @@ public final class JsonUtil {
     // Create an error message, the tokenizer did not contain an expected
     // character.
     //
-    private static String expectationError(String expected, StreamTokenizer st, StringBuilder parsed) {
+    private static void expectationError(String expected, StreamTokenizer st, StringBuilder parsed) {
         throw new IllegalArgumentException(String.format(JSON003, expected, errToken(st), parsed.toString()));
     }
 
@@ -488,17 +488,9 @@ public final class JsonUtil {
 
         // We will try to convert the value into an Integer.
         //
-        if (result == null) {
-            // The value was null, we can quickly return.
-            return null;
+        if(result instanceof Number) {
+            return ((Number) result).intValue();
         }
-        else if(result instanceof Long) {
-            return ((Long) result).intValue();
-        }
-        else if (result instanceof Integer) {
-            // The value is actually an integer, no conversions needed.
-            return (Integer) result;
-        } 
         else if (result instanceof String) {
             // We try to parse string values into boolean values.
             // String -> Integer coercion.
@@ -508,11 +500,6 @@ public final class JsonUtil {
             catch (NumberFormatException e) {
                 return null;
             }
-        } 
-        else if (result instanceof Double) {
-            // We try to interpret Doubles as Integers.
-            // Double -> Integer coercion.
-            return (int) Math.round((Double) result);
         }
         return null;
     }
@@ -529,15 +516,8 @@ public final class JsonUtil {
 
         // We will try to convert the value into an Integer.
         //
-        if (result == null) {
-            // The value was null, we can quickly return.
-            return null;
-        }
-        else if(result instanceof Long) {
-            return (Long) result;
-        }
-        else if (result instanceof Integer) {
-            return ((Integer) result).longValue();
+        if (result instanceof Number) {
+            return ((Number) result).longValue();
         }
         else if (result instanceof String) {
             // We try to parse string values into boolean values.
@@ -548,11 +528,6 @@ public final class JsonUtil {
             catch (NumberFormatException e) {
                 return null;
             }
-        }
-        else if (result instanceof Double) {
-            // We try to interpret Doubles as Integers.
-            // Double -> Integer coercion.
-            return Math.round((Double) result);
         }
         return null;
     }
@@ -569,15 +544,8 @@ public final class JsonUtil {
 
         // We will try to convert the value into an Integer.
         //
-        if (result == null) {
-            // The value was null, we can quickly return.
-            return null;
-        }
-        else if(result instanceof Long) {
-            return ((Long) result).doubleValue();
-        }
-        else if (result instanceof Integer) {
-            return ((Integer) result).doubleValue();
+        if(result instanceof Number) {
+            return ((Number) result).doubleValue();
         }
         else if (result instanceof String) {
             // We try to parse string values into boolean values.
@@ -588,11 +556,6 @@ public final class JsonUtil {
             catch (NumberFormatException e) {
                 return null;
             }
-        }
-        else if (result instanceof Double) {
-            // We try to interpret Doubles as Integers.
-            // Double -> Integer coercion.
-            return ((Double) result);
         }
         return null;
     }
@@ -888,7 +851,7 @@ public final class JsonUtil {
      * idea to compile the path expressions to access the nested map structures
      * if the paths are used multiple times.
      */
-    public static interface PathResolver {
+    public interface PathResolver {
         /**
          * Do a lookup of the path in the container and return the result.
          * 
@@ -920,14 +883,14 @@ public final class JsonUtil {
      * @see JsonUtil.PathResolver
      */
     private static class PropResolver implements PathResolver {
-        private String property = null;
+        private String property;
 
         public PropResolver(String property) {
             this.property = property;
         }
 
         private void check(Object container) {
-            if (container == null || !(container instanceof Map)) {
+            if (!(container instanceof Map)) {
                 throw new IllegalArgumentException("Container should be a Map instance.");
             }
         }
@@ -971,7 +934,7 @@ public final class JsonUtil {
         }
 
         private void check(Object container) {
-            if (container == null || !(container instanceof List)) {
+            if (!(container instanceof List)) {
                 throw new IllegalArgumentException("Container should be a List instance.");
             }
         }
