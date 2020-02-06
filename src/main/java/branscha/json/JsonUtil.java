@@ -1058,7 +1058,7 @@ public final class JsonUtil {
         }
 
         /*
-         * @see com.sdicons.json.JsonUtil.PathResolver#put(java.lang.Object, java.lang.Object)
+         * @see branscha.json.JsonUtil.PathResolver#put(java.lang.Object, java.lang.Object)
          */
         public void put(Object container, Object value) {
             // Cannot put something in here.
@@ -1066,7 +1066,7 @@ public final class JsonUtil {
         }
 
         /*
-         * @see com.sdicons.json.JsonUtil.PathResolver#createContainer()
+         * @see branscha.json.JsonUtil.PathResolver#createContainer()
          */
         public Object createContainer() {
             return null;
