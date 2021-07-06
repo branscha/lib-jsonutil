@@ -3,9 +3,8 @@
  * Released under the MIT License: http://opensource.org/licenses/MIT
  * Library "jsonutil"
  ******************************************************************************/
-package com.sdicons.json;
+package branscha.json;
 
-import com.sdicons.json.JsonUtil.PathResolver;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -298,7 +297,7 @@ public class JsonUtilTest {
     public void invalidMapAccess3() {
         // Cannot add intermediate containers to null, there is no place to
         // store new nodes.
-        PathResolver path = JsonUtil.compilePath("uno.duo.tres");
+        JsonUtil.PathResolver path = JsonUtil.compilePath("uno.duo.tres");
         path.put(null,  "oele");
     }
 
